@@ -109,3 +109,10 @@ dkms.conf
 # Ignore all local history of files
 .history
 .ionide
+
+### Node / Runtime ###
+node_modules/
+dist/
+.env
+data/local_queue.db
+data/local_queue.db-*
