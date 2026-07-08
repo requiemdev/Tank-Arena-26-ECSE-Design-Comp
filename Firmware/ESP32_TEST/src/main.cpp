@@ -1,18 +1,39 @@
 #include <Arduino.h>
+#include "tank_pins.h"
 
-// put function declarations here:
-int myFunction(int, int);
-
+// Runs once at start.
 void setup() {
-  // put your setup code here, to run once:
-  int result = myFunction(2, 3);
+  Serial.begin(115200); // Baud rate
+
+  // Set BIN1 to HIGH.
+  pinMode(PIN_BIN1, OUTPUT);
+  digitalWrite(PIN_BIN1, HIGH);
+
+  // Other used pin modes.
+  pinMode(PIN_LED, OUTPUT);
+
+  // PWM Configuration
+  analogWriteFrequency(333);
+
+  // ADC Configuration
+  analogSetWidth(12); // Should be default but included to be safe.
 }
 
+// Runs repeatedly after setup() is called.
 void loop() {
-  // put your main code here, to run repeatedly:
-}
+  // PWM output
+  analogWrite(PIN_SERVO, 288); // 288 = 0.80 * 360
 
-// put function definitions here:
-int myFunction(int x, int y) {
-  return x + y;
+  uint16_t analogReadValue = analogRead(PIN_VCOMP1);
+  Serial.printf("ADC Analog Read Value = %d\n", analogReadValue);
+  Serial.printf("Value in mV: = %d\n", analogReadMilliVolts(PIN_VCOMP1));
+  
+  // Write if value detected.
+  if (analogReadValue > 2047) {
+    digitalWrite(PIN_LED, HIGH);
+  } else {
+    digitalWrite(PIN_LED, LOW);
+  }
+
+  delay(500); // Milliseconds.
 }
