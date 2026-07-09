@@ -9,7 +9,9 @@
   },
   "scripts": {
     "dev": "tsx src/server.ts",
+    "robot": "tsx src/robotClient.ts",
     "build": "tsc --noEmit",
+    "test": "node --import tsx --test test/**/*.test.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

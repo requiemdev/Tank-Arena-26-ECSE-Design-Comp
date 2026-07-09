@@ -1,90 +1,113 @@
+import { readFile } from 'node:fs/promises';
 import Fastify from 'fastify';
 import { WebSocket, WebSocketServer, type RawData } from 'ws';
 import { GameEngine } from './gameEngine.js';
-import { enqueueMatchResult, startQueueWorker, stopQueueWorker } from './queueWorker.js';
 import { isClientType, isPlayerSlot, type PlayerSlot } from './types.js';
 
 const PORT = Number(process.env.PORT ?? 8080);
 const HOST = '0.0.0.0';
+const CONTROLLER_HTML_URL = new URL('../public/controller.html', import.meta.url);
 
-const app = Fastify({
-  logger: true
-});
-const gameEngine = new GameEngine(enqueueMatchResult);
-const wss = new WebSocketServer({
-  server: app.server,
-  path: '/connect'
-});
+export interface EdgeServerOptions {
+  gameEngine?: GameEngine;
+  logger?: boolean;
+}
 
-app.get('/health', async () => ({
-  ok: true,
-  status: gameEngine.getState().status
-}));
-
-app.get('/state', async () => gameEngine.getPublicState());
-
-app.post('/start', async (_request, reply) => {
-  const started = gameEngine.startCountdown();
-  return reply.code(started ? 202 : 409).send({
-    started,
-    state: gameEngine.getPublicState()
+export function buildServer(options: EdgeServerOptions = {}) {
+  const app = Fastify({
+    logger: options.logger ?? true
   });
-});
-
-app.post('/reset', async () => {
-  gameEngine.resetEngine();
-  return {
-    state: gameEngine.getPublicState()
-  };
-});
-
-app.post<{ Params: { player: string } }>('/hit/:player', async (request, reply) => {
-  const { player } = request.params;
-  if (!isPlayerSlot(player)) {
-    return reply.code(400).send({ error: 'player must be p1 or p2' });
-  }
-
-  gameEngine.registerHit(player);
-  return reply.code(202).send({
-    state: gameEngine.getPublicState()
+  const gameEngine = options.gameEngine ?? new GameEngine();
+  const wss = new WebSocketServer({
+    server: app.server,
+    path: '/connect'
   });
-});
 
-wss.on('connection', (socket, request) => {
-  const url = new URL(request.url ?? '/connect', `http://${request.headers.host ?? 'localhost'}`);
-  const type = url.searchParams.get('type');
-  const player = url.searchParams.get('player');
-  const username = url.searchParams.get('username') ?? undefined;
+  app.get('/health', async () => ({
+    ok: true,
+    status: gameEngine.getState().status
+  }));
 
-  if (!isClientType(type)) {
-    socket.close(1008, 'query param type must be controller, tank, or spectator');
-    return;
-  }
+  app.get('/', async (_request, reply) => reply.redirect('/controller'));
 
-  if (type === 'spectator') {
-    routeSpectator(socket);
-    return;
-  }
+  app.get('/controller', async (_request, reply) => {
+    const html = await readFile(CONTROLLER_HTML_URL, 'utf8');
+    return reply.type('text/html; charset=utf-8').send(html);
+  });
 
-  if (!isPlayerSlot(player)) {
-    socket.close(1008, 'query param player must be p1 or p2');
-    return;
-  }
+  app.get('/state', async () => gameEngine.getPublicState());
 
-  if (type === 'controller') {
-    routeController(socket, player, username);
-    return;
-  }
+  app.post('/start', async (_request, reply) => {
+    const started = gameEngine.startCountdown();
+    return reply.code(started ? 202 : 409).send({
+      started,
+      state: gameEngine.getPublicState()
+    });
+  });
 
-  routeTank(socket, player, username);
-});
+  app.post('/reset', async () => {
+    gameEngine.resetEngine();
+    return {
+      state: gameEngine.getPublicState()
+    };
+  });
 
-function routeController(socket: WebSocket, player: PlayerSlot, username?: string): void {
+  app.post<{ Params: { player: string } }>('/hit/:player', async (request, reply) => {
+    const { player } = request.params;
+    if (!isPlayerSlot(player)) {
+      return reply.code(400).send({ error: 'player must be p1 or p2' });
+    }
+
+    gameEngine.registerHit(player);
+    return reply.code(202).send({
+      state: gameEngine.getPublicState()
+    });
+  });
+
+  wss.on('connection', (socket, request) => {
+    const url = new URL(request.url ?? '/connect', `http://${request.headers.host ?? 'localhost'}`);
+    const type = url.searchParams.get('type');
+    const player = url.searchParams.get('player');
+    const username = url.searchParams.get('username') ?? undefined;
+
+    if (!isClientType(type)) {
+      socket.close(1008, 'query param type must be controller, tank, or spectator');
+      return;
+    }
+
+    if (type === 'spectator') {
+      routeSpectator(gameEngine, socket);
+      return;
+    }
+
+    if (!isPlayerSlot(player)) {
+      socket.close(1008, 'query param player must be p1 or p2');
+      return;
+    }
+
+    if (type === 'controller') {
+      routeController(gameEngine, socket, player, username);
+      return;
+    }
+
+    routeTank(gameEngine, socket, player, username);
+  });
+
+  app.addHook('onClose', (_instance, done) => {
+    wss.close(() => {
+      done();
+    });
+  });
+
+  return app;
+}
+
+function routeController(gameEngine: GameEngine, socket: WebSocket, player: PlayerSlot, username?: string): void {
   gameEngine.attachController(player, socket, username);
 
   socket.on('message', (data) => {
     const payload = rawDataToString(data);
-    if (handleControlMessage(payload, player)) {
+    if (handleControlMessage(gameEngine, payload, player)) {
       return;
     }
 
@@ -101,12 +124,12 @@ function routeController(socket: WebSocket, player: PlayerSlot, username?: strin
   });
 }
 
-function routeTank(socket: WebSocket, player: PlayerSlot, username?: string): void {
+function routeTank(gameEngine: GameEngine, socket: WebSocket, player: PlayerSlot, username?: string): void {
   gameEngine.attachTank(player, socket, username);
 
   socket.on('message', (data) => {
     const payload = rawDataToString(data);
-    if (!handleControlMessage(payload, player)) {
+    if (!handleControlMessage(gameEngine, payload, player)) {
       socket.send(JSON.stringify({ type: 'ack', source: 'tank', received: true }));
     }
   });
@@ -121,11 +144,11 @@ function routeTank(socket: WebSocket, player: PlayerSlot, username?: string): vo
   });
 }
 
-function routeSpectator(socket: WebSocket): void {
+function routeSpectator(gameEngine: GameEngine, socket: WebSocket): void {
   gameEngine.addSpectator(socket);
 
   socket.on('message', (data) => {
-    handleControlMessage(rawDataToString(data));
+    handleControlMessage(gameEngine, rawDataToString(data));
   });
 
   socket.on('close', () => {
@@ -137,7 +160,7 @@ function routeSpectator(socket: WebSocket): void {
   });
 }
 
-function handleControlMessage(payload: string, defaultPlayer?: PlayerSlot): boolean {
+function handleControlMessage(gameEngine: GameEngine, payload: string, defaultPlayer?: PlayerSlot): boolean {
   const message = parseControlMessage(payload);
   if (!message) {
     return false;
@@ -207,29 +230,43 @@ function rawDataToString(data: RawData): string {
   return Buffer.from(data).toString('utf8');
 }
 
-async function shutdown(signal: NodeJS.Signals): Promise<void> {
+async function shutdown(
+  app: ReturnType<typeof buildServer>,
+  stopQueueWorker: () => void,
+  signal: NodeJS.Signals
+): Promise<void> {
   app.log.info({ signal }, 'shutting down edge server');
   stopQueueWorker();
-  wss.close();
   await app.close();
 }
 
-process.once('SIGINT', (signal) => {
-  void shutdown(signal);
-});
-
-process.once('SIGTERM', (signal) => {
-  void shutdown(signal);
-});
-
-startQueueWorker();
-
-try {
-  await app.listen({
-    port: PORT,
-    host: HOST
+export async function startServer(): Promise<void> {
+  const { enqueueMatchResult, startQueueWorker, stopQueueWorker } = await import('./queueWorker.js');
+  const app = buildServer({
+    gameEngine: new GameEngine(enqueueMatchResult)
   });
-} catch (error) {
-  app.log.error(error);
-  process.exit(1);
+
+  process.once('SIGINT', (signal) => {
+    void shutdown(app, stopQueueWorker, signal);
+  });
+
+  process.once('SIGTERM', (signal) => {
+    void shutdown(app, stopQueueWorker, signal);
+  });
+
+  startQueueWorker();
+
+  try {
+    await app.listen({
+      port: PORT,
+      host: HOST
+    });
+  } catch (error) {
+    app.log.error(error);
+    process.exit(1);
+  }
+}
+
+if (import.meta.url === `file://${process.argv[1]}`) {
+  await startServer();
 }

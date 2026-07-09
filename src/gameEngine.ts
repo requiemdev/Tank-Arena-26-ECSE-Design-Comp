@@ -144,7 +144,7 @@ export class GameEngine {
       return false;
     }
 
-    tankSocket.send(payload);
+    tankSocket.send(JSON.stringify(input));
     return true;
   }
 

@@ -63,12 +63,12 @@ export function parsePlayerInputs(payload: string): PlayerInputs | null {
 
     const input = data as Record<string, unknown>;
     if (typeof input.throttle !== 'number' || typeof input.steering !== 'number') {
-      return null;
+      return parseNippleInputs(input);
     }
 
     return {
-      throttle: input.throttle,
-      steering: input.steering,
+      throttle: clampAxis(input.throttle),
+      steering: clampAxis(input.steering),
       turret: typeof input.turret === 'number' ? input.turret : undefined,
       fire: typeof input.fire === 'boolean' ? input.fire : undefined,
       seq: typeof input.seq === 'number' ? input.seq : undefined,
@@ -77,6 +77,32 @@ export function parsePlayerInputs(payload: string): PlayerInputs | null {
   } catch {
     return null;
   }
+}
+
+function parseNippleInputs(input: Record<string, unknown>): PlayerInputs | null {
+  const nestedData = isRecord(input.data) ? input.data : undefined;
+  const eventData = nestedData ?? input;
+  const vector = isRecord(eventData.vector) ? eventData.vector : null;
+
+  if (!vector || typeof vector.x !== 'number' || typeof vector.y !== 'number') {
+    return null;
+  }
+
+  return {
+    throttle: clampAxis(-vector.y),
+    steering: clampAxis(vector.x),
+    fire: typeof input.fire === 'boolean' ? input.fire : undefined,
+    seq: typeof input.seq === 'number' ? input.seq : undefined,
+    ts: typeof input.ts === 'number' ? input.ts : undefined
+  };
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === 'object';
+}
+
+function clampAxis(value: number): number {
+  return Math.max(-1, Math.min(1, value));
 }
 
 export function publicGameState(state: GameState): Omit<GameState, 'players'> & {
