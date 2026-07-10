@@ -120,3 +120,5 @@ dkms.conf
 
 # Netlist
 *.net
+
+node_modules
