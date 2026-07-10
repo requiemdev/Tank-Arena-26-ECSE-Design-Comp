@@ -109,3 +109,14 @@ dkms.conf
 # Ignore all local history of files
 .history
 .ionide
+
+
+# Logfile
+*.log
+
+# Simulation Outputs
+*.raw
+*.fft
+
+# Netlist
+*.net
