@@ -23,9 +23,9 @@ void initialiseSensors(std::function<void(SensorDirection)> function) {
     detect_hit_function = function;
 
     // Change depending on how pins connect to sensor directions.
-    attachInterrupt(digitalPinToInterrupt(PIN_VCOMP1), onHitFront, RISING);
-    attachInterrupt(digitalPinToInterrupt(PIN_VCOMP2), onHitRight, RISING);
-    attachInterrupt(digitalPinToInterrupt(PIN_VCOMP3), onHitBack, RISING);
-    attachInterrupt(digitalPinToInterrupt(PIN_VCOMP4), onHitLeft, RISING);
+    attachInterrupt(digitalPinToInterrupt(PIN_VCOMP1), onHitFront, FALLING);
+    attachInterrupt(digitalPinToInterrupt(PIN_VCOMP2), onHitRight, FALLING);
+    attachInterrupt(digitalPinToInterrupt(PIN_VCOMP3), onHitBack, FALLING);
+    attachInterrupt(digitalPinToInterrupt(PIN_VCOMP4), onHitLeft, FALLING);
 }
 
