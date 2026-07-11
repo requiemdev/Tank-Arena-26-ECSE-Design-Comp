@@ -120,3 +120,4 @@ dkms.conf
 
 # Netlist
 *.net
+/Firmware/ESP32_TEST/build
