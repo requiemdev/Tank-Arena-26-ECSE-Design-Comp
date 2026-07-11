@@ -14,7 +14,14 @@ void pwmSetup() {
     ledcAttachPin(PIN_PWMB, PWM_Channel::MOTOR_PWMB);
 }
 
-void pwmWrite(uint8_t channel, uint8_t duty) {
-    ledcWrite(channel, (4095 * duty) / 100);
+void pwmWrite(uint8_t channel, uint16_t duty) {
+    ledcWrite(channel, duty);
 }
 
+void pwmWriteFromFraction(uint8_t channel, float duty_fraction) {
+    ledcWrite(channel, (uint16_t)(4095 * duty_fraction));
+}
+
+void pwmWriteFromPercentage(uint8_t channel, uint8_t duty_percent) {
+    ledcWrite(channel, (uint16_t)duty_percent * 4096 / 100);
+}

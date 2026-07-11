@@ -18,8 +18,18 @@ void pwmSetup();
 
 // Set the specified PWM channel to the specified duty cycle.
 // channel = value defined in PWM_Channel enum (SERVO, MOTOR_A, MOTOR_B).
-// duty = value from 0 to 100 as percentage output pin is HIGH.
-void pwmWrite(uint8_t channel, uint8_t duty);
+// duty = value from 0 to 4095.
+void pwmWrite(uint8_t channel, uint16_t duty);
+
+// Set the specified PWM channel to the specified duty cycle.
+// channel = value defined in PWM_Channel enum (SERVO, MOTOR_A, MOTOR_B).
+// duty_fraction = Float between 0 and 1 (inclusive).
+void pwmWriteFromFraction(uint8_t channel, float duty_fraction);
+
+// Set the specified PWM channel to the specified duty cycle.
+// channel = value defined in PWM_Channel enum (SERVO, MOTOR_A, MOTOR_B).
+// duty_percent = Value from 0 to 100.
+void pwmWriteFromPercentage(uint8_t channel, uint8_t duty_percent);
 
 
 #endif // !PWM_H

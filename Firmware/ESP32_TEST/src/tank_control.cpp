@@ -69,6 +69,6 @@ void setTankMotors(float throttle, float steering) {
         left_multiplier *= (1 + steering);
     }
 
-    pwmWrite(PWM_Channel::MOTOR_PWMA, (uint8_t)(100*left_multiplier));
-    pwmWrite(PWM_Channel::MOTOR_PWMB, (uint8_t)(100*right_multiplier));
+    pwmWriteFromFraction(PWM_Channel::MOTOR_PWMA, left_multiplier);
+    pwmWriteFromFraction(PWM_Channel::MOTOR_PWMB, right_multiplier);
 }

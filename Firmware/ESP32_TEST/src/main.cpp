@@ -31,7 +31,7 @@ void setup() {
   digitalWrite(PIN_BIN1, HIGH);
 
   // PWM output
-  pwmWrite(PWM_Channel::SERVO, 75);
+  pwmWriteFromPercentage(PWM_Channel::SERVO, 75);
 
   // Set motors to backwards and right (change in testing).
   setTankMotors(-1, 1);
