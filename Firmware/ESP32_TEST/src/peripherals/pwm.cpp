@@ -14,7 +14,7 @@ void pwmSetup() {
     ledcAttachPin(PIN_PWMB, PWM_Channel::MOTOR_B);
 }
 
-void inline pwmWrite(uint8_t channel, uint8_t duty) {
+void pwmWrite(uint8_t channel, uint8_t duty) {
     ledcWrite(channel, (4096 * duty) / 100);
 }
 
