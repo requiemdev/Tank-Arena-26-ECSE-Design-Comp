@@ -24,6 +24,10 @@ enum MotorDirection {
 #define SET_RIGHT_MOTOR_FORWARD setTankMotorDirection(TankMotor::MOTOR_B, MotorDirection::CW_DIRECTION)
 #define SET_RIGHT_MOTOR_BACKWARD setTankMotorDirection(TankMotor::MOTOR_B, MotorDirection::ACW_DIRECTION)
 
+// Set the rotation of the servo depending on factor between -1 and 1.
+// Factor: -1 = Full CW, +1 = Full CCW.
+void setServoRotation(float factor);
+
 // Set the IR emitter to ON or OFF depending on the value.
 // Value should be LOW (0x0) or HIGH (0x1).
 void setTankLed(uint8_t value);
@@ -38,5 +42,8 @@ void setTankMotorDirection(TankMotor motor, MotorDirection direction);
 // Throttle: -1 = Full back, +1 = Full forward, 0 = Stop
 // Steering: -1 = Full left, +1 = Full right, 0 = Straight
 void setTankMotors(float throttle, float steering);
+
+// Enable or disable the motors by setting STBY pin.
+void setTankMotorsEnabled(uint8_t enabled);
 
 #endif // !TANK_CONTROL_H

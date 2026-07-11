@@ -23,5 +23,5 @@ void pwmWriteFromFraction(uint8_t channel, float duty_fraction) {
 }
 
 void pwmWriteFromPercentage(uint8_t channel, uint8_t duty_percent) {
-    ledcWrite(channel, (uint16_t)duty_percent * 4096 / 100);
+    ledcWrite(channel, (uint16_t)duty_percent * 4095 / 100);
 }

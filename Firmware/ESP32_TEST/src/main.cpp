@@ -25,14 +25,10 @@ void setup() {
   // Initialise Sensors
   initialiseSensors(onSensorHit);
 
+  // Initialise Motor Controller
+  setTankMotorsEnabled(true);
+
 #ifdef USE_TEST_CODE
-  
-  // Set BIN1 to HIGH.
-  digitalWrite(PIN_BIN1, HIGH);
-
-  // PWM output
-  pwmWriteFromPercentage(PWM_Channel::SERVO, 75);
-
   // Set motors to backwards and right (change in testing).
   setTankMotors(-1, 1);
   
@@ -48,25 +44,14 @@ void loop() {
   digitalWrite(PIN_LED, digital_read_value); // HIGH or LOW.
 
   setTankLed(HIGH);
+  setServoRotation(1); // Full forward rotation.
   
   delay(500); // Milliseconds.
 
   setTankLed(LOW);
+  setServoRotation(-1); // Full backward rotation.
 
   delay(500); // ms
 
 #endif // USE_TEST_CODE
 }
-
-
-#ifndef USE_TEST_CODE
-
-void setup() {
-
-}
-
-void loop() {
-
-}
-
-#endif // !USE_TEST_CODE

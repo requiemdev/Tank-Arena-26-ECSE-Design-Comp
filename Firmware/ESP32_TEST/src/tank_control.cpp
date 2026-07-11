@@ -1,5 +1,12 @@
 #include "tank_control.h"
 
+// At factor = -1, duty should be 1/6. At factor = 1, duty should be 5/6.
+
+void setServoRotation(float factor) {
+    uint16_t duty = factor * 1365 + 2048;
+    pwmWrite(PWM_Channel::SERVO, duty);
+}
+
 void setTankLed(uint8_t value) {
     digitalWrite(PIN_LED, value);
 }
@@ -71,4 +78,12 @@ void setTankMotors(float throttle, float steering) {
 
     pwmWriteFromFraction(PWM_Channel::MOTOR_PWMA, left_multiplier);
     pwmWriteFromFraction(PWM_Channel::MOTOR_PWMB, right_multiplier);
+}
+
+void setTankMotorsEnabled(uint8_t enabled) {
+    if (enabled) {
+        digitalWrite(PIN_STBY, HIGH);
+    } else {
+        digitalWrite(PIN_STBY, LOW);
+    }
 }
