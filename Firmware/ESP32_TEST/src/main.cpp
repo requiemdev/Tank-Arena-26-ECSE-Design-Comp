@@ -19,9 +19,6 @@ void setup() {
   // Initialise pin I/O
   configurePinIO();
 
-  // Set BIN1 to HIGH.
-  digitalWrite(PIN_BIN1, HIGH);
-
   // PWM Configuration
   pwmSetup();
 
@@ -30,8 +27,14 @@ void setup() {
 
 #ifdef USE_TEST_CODE
   
+  // Set BIN1 to HIGH.
+  digitalWrite(PIN_BIN1, HIGH);
+
   // PWM output
   pwmWrite(PWM_Channel::SERVO, 75);
+
+  // Set motors to backwards and right (change in testing).
+  setTankMotors(-1, 1);
   
 #endif // USE_TEST_CODE
 }
