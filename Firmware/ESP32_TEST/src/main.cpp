@@ -3,10 +3,15 @@
 #include "tank_pins.h"
 
 #include "pwm.h"
+#include "sensors.h"
 
 #define SERIAL_BAUD_RATE 115200
 
 #ifdef USE_TEST_CODE
+
+void detectSensor(SensorDirection sensor_direction) {
+  Serial.printf("Sensor %d detected!\n", sensor_direction);
+}
 
 // Runs once at start.
 void setup() {
@@ -23,14 +28,17 @@ void setup() {
 
   // PWM output
   pwmWrite(PWM_Channel::SERVO, 75);
+
+  // Sensor initialise
+  initialiseSensors(detectSensor);
 }
 
 // Runs repeatedly after setup() is called.
 void loop() {
-  int digitalReadValue = digitalRead(PIN_VCOMP1);
-  Serial.printf("Digital Read Value = %d\n", digitalReadValue);
-  digitalWrite(PIN_LED, digitalReadValue); // HIGH or LOW.
-
+  int digital_read_value = digitalRead(PIN_VCOMP1);
+  Serial.printf("Digital Read Value = %d\n", digital_read_value);
+  digitalWrite(PIN_LED, digital_read_value); // HIGH or LOW.
+  
   delay(500); // Milliseconds.
 }
 
