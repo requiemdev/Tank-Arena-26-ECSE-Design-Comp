@@ -1,6 +1,7 @@
 #ifndef TANK_PINS_H
 #define TANK_PINS_H
 
+#include <Arduino.h>
 #include "pins_arduino.h"
 
 // Motor Pins
@@ -27,4 +28,7 @@
 #define PIN_SPKR 33
 #define PIN_LED 32
 
-#endif // TANK_PINS_H
+// Configure the MCU pins to be input or output as needed.
+void configurePinIO();
+
+#endif // !TANK_PINS_H

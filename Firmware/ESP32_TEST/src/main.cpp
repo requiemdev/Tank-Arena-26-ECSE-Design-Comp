@@ -2,6 +2,8 @@
 #include "code_config.h"
 #include "tank_pins.h"
 
+#include "pwm.h"
+
 #define SERIAL_BAUD_RATE 115200
 
 #ifdef USE_TEST_CODE
@@ -10,18 +12,17 @@
 void setup() {
   Serial.begin(SERIAL_BAUD_RATE);
 
+  // Initialise pin I/O
+  configurePinIO();
+
   // Set BIN1 to HIGH.
-  pinMode(PIN_BIN1, OUTPUT);
   digitalWrite(PIN_BIN1, HIGH);
 
-  // Other used pin modes.
-  pinMode(PIN_LED, OUTPUT);
-
   // PWM Configuration
-  analogWriteFrequency(333);
+  pwmSetup();
 
   // PWM output
-  analogWrite(PIN_SERVO, 204); // 204 = 0.80 * 255
+  pwmWrite(PWM_Channel::SERVO, 75);
 }
 
 // Runs repeatedly after setup() is called.

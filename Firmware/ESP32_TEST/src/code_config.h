@@ -4,4 +4,4 @@
 // Run a program for testing peripherals.
 #define USE_TEST_CODE
 
-#endif //CODE_CONFIG_H
+#endif // !CODE_CONFIG_H
