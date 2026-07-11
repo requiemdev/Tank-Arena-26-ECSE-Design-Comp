@@ -4,7 +4,6 @@
 // Set them up on different channels to independently control them.
 
 void pwmSetup() {
-    //analogWriteFrequency(333);
     ledcSetup(PWM_Channel::SERVO, 333, 12);
     ledcSetup(PWM_Channel::MOTOR_PWMA, 1000, 12);
     ledcSetup(PWM_Channel::MOTOR_PWMB, 1000, 12);

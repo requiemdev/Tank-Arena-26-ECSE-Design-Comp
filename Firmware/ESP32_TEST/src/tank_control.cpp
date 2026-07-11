@@ -3,7 +3,7 @@
 // At factor = -1, duty should be 1/6. At factor = 1, duty should be 5/6.
 
 void setServoRotation(float factor) {
-    uint16_t duty = factor * 1365 + 2048;
+    uint16_t duty = factor * 13 * TURRET_ROTATION_FACTOR + 2048;
     pwmWrite(PWM_Channel::SERVO, duty);
 }
 
@@ -67,13 +67,13 @@ void setTankMotors(float throttle, float steering) {
     }
 
     // Set motor strengths based on throttle and one motor slower by steering factor.
-    float left_multiplier = throttle;
-    float right_multiplier = throttle;
+    float left_multiplier = throttle * MOVEMENT_FACTOR;
+    float right_multiplier = throttle * MOVEMENT_FACTOR;
 
     if (steering > 0) {  // Make right motor slower.
-        right_multiplier *= (1 - steering);
+        right_multiplier *= (1 - steering) * STEERING_FACTOR;
     } else {  // Make left motor slower.
-        left_multiplier *= (1 + steering);
+        left_multiplier *= (1 + steering) * STEERING_FACTOR;
     }
 
     pwmWriteFromFraction(PWM_Channel::MOTOR_PWMA, left_multiplier);

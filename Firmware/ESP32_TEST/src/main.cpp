@@ -1,10 +1,11 @@
 #include <Arduino.h>
-#include "code_config.h"
 #include "peripherals/tank_pins.h"
 
 #include "peripherals/pwm.h"
 #include "peripherals/sensors.h"
 #include "tank_control.h"
+
+#define USE_TEST_CODE // Enable/disable code used for testing peripherals
 
 #define SERIAL_BAUD_RATE 115200
 

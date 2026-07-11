@@ -3,7 +3,6 @@
 
 #include <Arduino.h>
 
-#include "code_config.h"
 #include "tank_pins.h"
 
 enum PWM_Channel {

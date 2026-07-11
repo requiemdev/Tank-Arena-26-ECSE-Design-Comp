@@ -2,7 +2,6 @@
 #define SENSORS_H
 
 #include <Arduino.h>
-#include "code_config.h"
 #include "tank_pins.h"
 
 enum SensorDirection {

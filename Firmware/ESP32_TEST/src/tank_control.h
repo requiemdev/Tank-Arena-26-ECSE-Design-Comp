@@ -24,6 +24,13 @@ enum MotorDirection {
 #define SET_RIGHT_MOTOR_FORWARD setTankMotorDirection(TankMotor::MOTOR_B, MotorDirection::CW_DIRECTION)
 #define SET_RIGHT_MOTOR_BACKWARD setTankMotorDirection(TankMotor::MOTOR_B, MotorDirection::ACW_DIRECTION)
 
+// Motor constants for controlling movement of tank.
+// Top two are between 0 and 1, bottom is between 0 and 100. (although ranges can be changed if more suitable for config).
+#define MOVEMENT_FACTOR 1
+#define STEERING_FACTOR 1
+#define TURRET_ROTATION_FACTOR 100
+
+
 // Set the rotation of the servo depending on factor between -1 and 1.
 // Factor: -1 = Full CW, +1 = Full CCW.
 void setServoRotation(float factor);
