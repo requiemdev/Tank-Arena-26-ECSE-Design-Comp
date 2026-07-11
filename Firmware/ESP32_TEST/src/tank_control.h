@@ -3,10 +3,35 @@
 
 #include <Arduino.h>
 #include "peripherals/tank_pins.h"
+#include "peripherals/pwm.h"
+
+// Motor A or B for input in setTankMotorDirection() function.
+enum TankMotor {
+    MOTOR_A,
+    MOTOR_B
+};
+
+// Motor directions for input in setTankMotorDirection() function.
+enum MotorDirection {
+    CW_DIRECTION,
+    NO_DIRECTION,
+    ACW_DIRECTION
+};
+
+// Change based on how motors are connected.
+#define SET_LEFT_MOTOR_FORWARD setTankMotorDirection(TankMotor::MOTOR_A, MotorDirection::ACW_DIRECTION)
+#define SET_LEFT_MOTOR_BACKWARD setTankMotorDirection(TankMotor::MOTOR_A, MotorDirection::CW_DIRECTION)
+#define SET_RIGHT_MOTOR_FORWARD setTankMotorDirection(TankMotor::MOTOR_B, MotorDirection::CW_DIRECTION)
+#define SET_RIGHT_MOTOR_BACKWARD setTankMotorDirection(TankMotor::MOTOR_B, MotorDirection::ACW_DIRECTION)
 
 // Set the IR emitter to ON or OFF depending on the value.
 // Value should be LOW (0x0) or HIGH (0x1).
 void setTankLed(uint8_t value);
+
+// Set the rotation direction of the specified motor.
+// Motor = MOTOR_A or MOTOR_B
+// Direction = CW_DIRECTION, NO_DIRECTION or ACW_DIRECTION.
+void setTankMotorDirection(TankMotor motor, MotorDirection direction);
 
 // Set the motors based on throttle and steering values.
 // Both are values between -1 and 1.
