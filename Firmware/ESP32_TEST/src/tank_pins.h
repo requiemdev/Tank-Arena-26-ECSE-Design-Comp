@@ -1,6 +1,8 @@
 #ifndef TANK_PINS_H
 #define TANK_PINS_H
 
+#include "pins_arduino.h"
+
 // Motor Pins
 #define PIN_AIN1 3
 #define PIN_AIN2 19
