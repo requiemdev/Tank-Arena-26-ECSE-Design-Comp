@@ -90,7 +90,7 @@ function parseNippleInputs(input: Record<string, unknown>): PlayerInputs | null 
   }
 
   return {
-    throttle: clampAxis(-vector.y),
+    throttle: clampAxis(vector.y),
     steering: clampAxis(vector.x),
     fire: typeof input.fire === 'boolean' ? input.fire : undefined,
     seq: typeof input.seq === 'number' ? input.seq : undefined,

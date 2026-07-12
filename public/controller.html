@@ -444,7 +444,7 @@
         joystick.on("move", (_event, data) => {
           latest = {
             ...latest,
-            throttle: clamp(-(data.vector?.y ?? 0)),
+            throttle: clamp(data.vector?.y ?? 0),
             steering: clamp(data.vector?.x ?? 0),
           };
           renderAxes();

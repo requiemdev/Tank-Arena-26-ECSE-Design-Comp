@@ -56,7 +56,7 @@ describe('parsePlayerInputs', () => {
         JSON.stringify({
           vector: {
             x: -0.4,
-            y: -0.8
+            y: 0.8
           },
           direction: {
             x: 'left',
@@ -83,7 +83,7 @@ describe('parsePlayerInputs', () => {
           data: {
             vector: {
               x: 1.25,
-              y: 1.5
+              y: -1.5
             },
             direction: {
               x: 'right',

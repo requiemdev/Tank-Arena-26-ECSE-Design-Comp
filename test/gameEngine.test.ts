@@ -86,7 +86,7 @@ describe('GameEngine', () => {
       data: {
         vector: {
           x: 0.3,
-          y: -0.75
+          y: 0.75
         },
         direction: {
           x: 'right',
