@@ -9,18 +9,120 @@
     <style>
       :root {
         color-scheme: dark;
-        --bg: #101419;
-        --panel: #1b242d;
-        --panel-2: #24313c;
-        --text: #f5f7fa;
-        --muted: #a9b5bf;
-        --accent: #34c759;
-        --danger: #ff453a;
-        --line: #34424f;
+        --bg: #29282f;
+        --shell: #403d46;
+        --bezel: #151922;
+        --key: #5e6b78;
+        --key-dark: #2d333d;
+        --text: #edf2f7;
+        --muted: #a9b3bd;
+        --cyan: #48d9e9;
+        --blue: #3da7ff;
+        --yellow: #efc733;
+        --red: #d92532;
+        --line: #10141b;
       }
 
       * {
         box-sizing: border-box;
+      }
+
+      body {
+        min-height: 100dvh;
+        margin: 0;
+        background:
+          radial-gradient(circle at 14% 0%, rgba(255, 255, 255, 0.12), transparent 24rem),
+          var(--shell);
+        color: var(--text);
+        font-family:
+          ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+          monospace;
+      }
+
+      .controller-shell {
+        min-height: 100dvh;
+        width: 100%;
+        max-width: none;
+        padding: clamp(14px, 3vw, 28px);
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 8rem),
+          var(--shell);
+        box-shadow: inset 0 0 0 2px #5a5660;
+      }
+
+      h1 {
+        color: var(--red);
+        font-size: 1rem;
+        letter-spacing: 0;
+        text-transform: uppercase;
+        text-shadow: 0 2px 0 var(--line);
+      }
+
+      label {
+        display: grid;
+        gap: 4px;
+        color: var(--muted);
+        font-size: 0.72rem;
+        text-transform: uppercase;
+      }
+
+      input,
+      select,
+      button,
+      .player-card,
+      .meter {
+        border: 2px solid var(--line);
+        border-radius: 6px;
+        box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.18), 0 4px 0 var(--line);
+      }
+
+      input,
+      select {
+        width: 100%;
+        min-height: 40px;
+        padding: 8px 14px 8px 16px;
+        background: var(--key);
+        color: var(--text);
+        outline: none;
+      }
+
+      input:focus,
+      select:focus,
+      button:focus-visible {
+        border-color: var(--yellow);
+      }
+
+      button {
+        min-height: 46px;
+        color: #10141b;
+        font-weight: 900;
+        text-transform: uppercase;
+        transition:
+          transform 120ms ease,
+          box-shadow 120ms ease,
+          filter 120ms ease;
+      }
+
+      button:active {
+        transform: translateY(3px);
+        box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.12), 0 1px 0 var(--line);
+      }
+
+      button:not(:disabled):hover {
+        filter: brightness(1.08);
+      }
+
+      .connect-key {
+        background: var(--cyan);
+      }
+
+      .ready-key {
+        background: var(--blue);
+      }
+
+      .fire-key {
+        background: var(--red);
+        color: white;
       }
 
       .setup {
@@ -29,28 +131,30 @@
         gap: 10px;
       }
 
-      .setup label:first-child {
-        grid-column: 1 / -1;
-      }
-
       .status {
         display: inline-flex;
         align-items: center;
         gap: 8px;
-        color: var(--muted);
-        font-size: 0.9rem;
+        color: var(--text);
+        font-size: 0.72rem;
         white-space: nowrap;
+        padding: 7px 9px;
+        background: var(--bezel);
+        border: 2px solid var(--line);
+        border-radius: 999px;
       }
 
       .dot {
         width: 10px;
         height: 10px;
         border-radius: 50%;
-        background: var(--danger);
+        background: var(--red);
+        box-shadow: 0 0 12px rgba(217, 37, 50, 0.85);
       }
 
       .dot.connected {
-        background: var(--accent);
+        background: var(--cyan);
+        box-shadow: 0 0 12px rgba(72, 217, 233, 0.85);
       }
 
       .hidden {
@@ -58,20 +162,50 @@
       }
 
       #joystick {
-        width: min(42vw, 320px);
+        width: min(56vw, 340px);
         aspect-ratio: 1;
         position: relative;
-        border: 1px solid var(--line);
         border-radius: 50%;
-        background: var(--panel);
+        pointer-events: none;
+      }
+
+      .pad {
+        display: grid;
+        place-items: center;
+        min-height: 100%;
+        position: relative;
         touch-action: none;
         user-select: none;
+      }
+
+      .meter {
+        height: 10px;
+        overflow: hidden;
+        background: var(--bezel);
+      }
+
+      .meter-fill {
+        height: 100%;
+        border-radius: 0 999px 999px 0;
+        background: linear-gradient(90deg, var(--cyan), var(--blue));
+      }
+
+      .player-card {
+        background: var(--key-dark);
       }
 
       .actions {
         display: grid;
         grid-template-columns: 1fr;
         gap: 10px;
+      }
+
+      #inGame > div {
+        min-height: min(68dvh, 520px);
+      }
+
+      .fire-key {
+        min-height: min(44dvh, 300px);
       }
 
       button:disabled,
@@ -81,9 +215,7 @@
       }
 
       @media (min-width: 780px) {
-        main {
-          max-width: 860px;
-          margin: 0 auto;
+        .controller-shell {
           padding: 24px;
         }
 
@@ -91,28 +223,71 @@
           grid-template-columns: 2fr 1fr 1fr;
         }
 
-        .setup label:first-child {
+      }
+
+      @media (orientation: landscape) and (max-height: 520px) {
+        .controller-shell {
+          min-height: 100dvh;
+          padding: 12px 18px;
+        }
+
+        .controller-shell > div:first-child {
+          margin-bottom: 8px;
+        }
+
+        #preGame {
+          grid-template-columns: minmax(170px, 1fr) minmax(220px, 1.25fr) 1fr;
+          align-items: end;
+        }
+
+        #preGame .grid {
           grid-column: auto;
+        }
+
+        #inGame {
+          display: grid;
+          grid-template-columns: minmax(250px, 1fr) minmax(260px, 1fr);
+          gap: 14px;
+          align-items: center;
+        }
+
+        #inGame > section {
+          grid-column: 1 / -1;
+          padding-bottom: 0;
+        }
+
+        #inGame > div {
+          display: contents;
+        }
+
+        #inGame .pad,
+        #inGame .actions {
+          width: auto;
+        }
+
+        #joystick {
+          width: min(74vh, 360px);
+          margin: 0 auto;
+        }
+
+        .fire-key {
+          min-height: min(64vh, 330px);
         }
       }
     </style>
   </head>
   <body>
-    <div class="p-2 text-sm">
+    <main class="controller-shell text-sm">
       <div class="flex justify-between items-center">
         <h1 class="font-bold">Tank Controller</h1>
 
-        <div class="status h-2">
+        <div class="status">
           <span id="statusDot" class="dot"></span
           ><span id="statusText">Disconnected</span>
         </div>
       </div>
 
       <section id="preGame" class="text-xs grid gap-2 pt-2">
-        <label>
-          Edge server
-          <input id="serverUrl" autocomplete="off" />
-        </label>
         <label>
           Player
           <select id="player">
@@ -125,78 +300,70 @@
           <input id="username" autocomplete="name" value="Driver" />
         </label>
 
-        <div class="grid grid-cols-2 gap-2">
-          <button id="connect" class="border-2 p-2 bg-green-500" type="button">
+        <div class="grid grid-cols-2 gap-2 col-span-2">
+          <button id="connect" class="connect-key p-2" type="button">
             Connect
           </button>
 
-          <button id="ready" class="border-2 p-2 bg-blue-500" type="button">
+          <button id="ready" class="ready-key p-2" type="button">
             Ready
           </button>
         </div>
       </section>
 
-      <div class="flex gap-4 text-center items-center pt-2">
-        <div class="flex items-center gap-2 w-full">
-          <div class="w-12">HP</div>
-          <div class="flex-1 bg-gray-300 rounded-full h-2">
-            <div class="bg-blue-500 h-2 rounded-full" style="width: 45%"></div>
-          </div>
-        </div>
-
-        <div class="border-l-2 h-6"></div>
-
-        <div class="flex items-center gap-2 w-full">
-          <div class="w-16">Shield</div>
-          <div class="flex-1 bg-gray-300 rounded-full h-2">
-            <div class="bg-blue-500 h-2 rounded-full" style="width: 45%"></div>
-          </div>
-        </div>
-      </div>
-
       <section id="inGame" class="hidden pt-2">
-        <div class="flex gap-4">
+        <section class="flex gap-4 text-center items-center pb-3">
+          <div class="flex items-center gap-2 w-full">
+            <div class="w-12">HP</div>
+            <div class="meter flex-1">
+              <div class="meter-fill" style="width: 45%"></div>
+            </div>
+          </div>
+
+          <div class="border-l-2 h-6"></div>
+
+          <div class="flex items-center gap-2 w-full">
+            <div class="w-16">Shield</div>
+            <div class="meter flex-1">
+              <div class="meter-fill" style="width: 45%"></div>
+            </div>
+          </div>
+        </section>
+
+        <div class="flex gap-4 items-center">
           <div class="pad w-1/2" aria-label="Joystick">
             <div id="joystick" class=""></div>
           </div>
 
           <div class="actions w-1/2">
-            <button id="fire" class="danger border-2 p-2 bg-red-500">
+            <button id="fire" class="fire-key p-2">
               Fire
             </button>
           </div>
         </div>
       </section>
 
-      <section class="grid grid-cols-2 gap-2 pt-2" aria-live="polite">
-        <div id="p1Card" class="border-2 p-2">
+      <section class="lobby-info grid grid-cols-2 gap-2 pt-2" aria-live="polite">
+        <div id="p1Card" class="player-card p-2">
           <div class="font-bold">Player 1</div>
-          <div id="p1State" class="text-xs text-gray-300">Open</div>
+          <div id="p1State" class="text-xs" style="color: var(--muted)">Open</div>
         </div>
-        <div id="p2Card" class="border-2 p-2">
+        <div id="p2Card" class="player-card p-2">
           <div class="font-bold">Player 2</div>
-          <div id="p2State" class="text-xs text-gray-300">Open</div>
+          <div id="p2State" class="text-xs" style="color: var(--muted)">Open</div>
         </div>
       </section>
 
-      <div id="matchState" class="pt-2 font-bold" aria-live="polite">
+      <div id="matchState" class="lobby-info pt-2 font-bold" aria-live="polite">
         Waiting for players
       </div>
-
-      <section class="flex gap-5 ps-5" aria-live="polite">
-        <div>Throttle <strong id="throttle">0.00</strong></div>
-        <div>Steering <strong id="steering">0.00</strong></div>
-      </section>
-    </div>
+    </main>
 
     <script>
-      const serverUrlInput = document.querySelector("#serverUrl");
       const playerInput = document.querySelector("#player");
       const usernameInput = document.querySelector("#username");
       const statusDot = document.querySelector("#statusDot");
       const statusText = document.querySelector("#statusText");
-      const throttleText = document.querySelector("#throttle");
-      const steeringText = document.querySelector("#steering");
       const connectButton = document.querySelector("#connect");
       const readyButton = document.querySelector("#ready");
       const fireButton = document.querySelector("#fire");
@@ -205,11 +372,12 @@
       const p2StateText = document.querySelector("#p2State");
       const preGame = document.querySelector("#preGame");
       const inGame = document.querySelector("#inGame");
-      const joystickZone = document.querySelector("#joystick");
+      const lobbyInfo = document.querySelectorAll(".lobby-info");
+      const joystickZone = document.querySelector(".pad");
 
       const defaultProtocol =
         window.location.protocol === "https:" ? "wss:" : "ws:";
-      serverUrlInput.value = `${defaultProtocol}//${window.location.host}/connect`;
+      const serverUrl = `${defaultProtocol}//${window.location.host}/connect`;
 
       let socket;
       let seq = 0;
@@ -250,7 +418,7 @@
       });
 
       function connect() {
-        const url = new URL(serverUrlInput.value);
+        const url = new URL(serverUrl);
         url.searchParams.set("type", "controller");
         url.searchParams.set("player", playerInput.value);
         url.searchParams.set("username", usernameInput.value || "Driver");
@@ -309,7 +477,7 @@
         sendJson({ type: "state" });
 
         try {
-          const url = new URL(serverUrlInput.value);
+          const url = new URL(serverUrl);
           url.protocol = url.protocol === "wss:" ? "https:" : "http:";
           url.pathname = "/state";
           url.search = "";
@@ -349,6 +517,7 @@
         const inMatch = gameState.status === "COUNTDOWN" || gameState.status === "ACTIVE";
         preGame.classList.toggle("hidden", inMatch);
         inGame.classList.toggle("hidden", !inMatch);
+        lobbyInfo.forEach((element) => element.classList.toggle("hidden", inMatch));
         if (inMatch) {
           window.requestAnimationFrame(setupJoystick);
         } else {
@@ -432,12 +601,11 @@
           return;
         }
 
-        const size = Math.min(190, rect.width);
+        const size = Math.min(190, rect.width, rect.height);
         joystick = nipplejs.create({
           zone: joystickZone,
           mode: "static",
           position: { left: `${rect.width / 2}px`, top: `${rect.height / 2}px` },
-          color: "#f5f7fa",
           size,
         });
 
@@ -447,7 +615,6 @@
             throttle: clamp(data.vector?.y ?? 0),
             steering: clamp(data.vector?.x ?? 0),
           };
-          renderAxes();
         });
 
         joystick.on("end", stopMoving);
@@ -478,29 +645,24 @@
         }
 
         const rect = joystickZone.getBoundingClientRect();
-        const radius = rect.width / 2;
+        const radius = Math.min(rect.width, rect.height) / 2;
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
         latest = {
           ...latest,
-          throttle: clamp((rect.top + radius - event.clientY) / radius),
-          steering: clamp((event.clientX - rect.left - radius) / radius),
+          throttle: clamp((centerY - event.clientY) / radius),
+          steering: clamp((event.clientX - centerX) / radius),
         };
-        renderAxes();
       }
 
       function stopMoving() {
         latest = { ...latest, throttle: 0, steering: 0 };
-        renderAxes();
         sendInput();
       }
 
       function setStatus(text, connected) {
         statusText.textContent = text;
         statusDot.classList.toggle("connected", connected);
-      }
-
-      function renderAxes() {
-        throttleText.textContent = latest.throttle.toFixed(2);
-        steeringText.textContent = latest.steering.toFixed(2);
       }
 
       function clamp(value) {
