@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>ECSE Tank Controller</title>
     <script src="https://cdn.jsdelivr.net/npm/nipplejs@0.10.2/dist/nipplejs.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
       :root {
         color-scheme: dark;
@@ -20,76 +21,6 @@
 
       * {
         box-sizing: border-box;
-      }
-
-      body {
-        margin: 0;
-        min-height: 100vh;
-        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-        background: var(--bg);
-        color: var(--text);
-      }
-
-      main {
-        display: grid;
-        grid-template-rows: auto 1fr auto;
-        gap: 16px;
-        min-height: 100vh;
-        padding: 16px;
-      }
-
-      header,
-      footer {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-      }
-
-      h1 {
-        margin: 0;
-        font-size: 1.25rem;
-        font-weight: 700;
-      }
-
-      label {
-        display: grid;
-        gap: 6px;
-        color: var(--muted);
-        font-size: 0.78rem;
-      }
-
-      input,
-      select,
-      button {
-        min-height: 44px;
-        border: 1px solid var(--line);
-        border-radius: 8px;
-        background: var(--panel);
-        color: var(--text);
-        font: inherit;
-      }
-
-      input,
-      select {
-        padding: 0 12px;
-      }
-
-      button {
-        padding: 0 16px;
-        font-weight: 700;
-      }
-
-      button.primary {
-        border-color: transparent;
-        background: var(--accent);
-        color: #07110a;
-      }
-
-      button.danger {
-        border-color: transparent;
-        background: var(--danger);
-        color: #fff;
       }
 
       .setup {
@@ -122,18 +53,8 @@
         background: var(--accent);
       }
 
-      .pad {
-        display: grid;
-        place-items: center;
-        min-height: 320px;
-        border: 1px solid var(--line);
-        border-radius: 8px;
-        background: var(--panel-2);
-        touch-action: none;
-      }
-
       #joystick {
-        width: min(78vw, 420px);
+        width: 25vw;
         aspect-ratio: 1;
         position: relative;
       }
@@ -142,14 +63,6 @@
         display: grid;
         grid-template-columns: repeat(3, 1fr);
         gap: 10px;
-      }
-
-      .telemetry {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 10px;
-        color: var(--muted);
-        font-variant-numeric: tabular-nums;
       }
 
       @media (min-width: 780px) {
@@ -170,13 +83,17 @@
     </style>
   </head>
   <body>
-    <main>
-      <header>
-        <h1>Tank Controller</h1>
-        <div class="status"><span id="statusDot" class="dot"></span><span id="statusText">Disconnected</span></div>
-      </header>
+    <div class="p-2 text-sm">
+      <div class="flex justify-between items-center">
+        <h1 class="font-bold">Tank Controller</h1>
 
-      <section class="setup" aria-label="Connection settings">
+        <div class="status h-2">
+          <span id="statusDot" class="dot"></span
+          ><span id="statusText">Disconnected</span>
+        </div>
+      </div>
+
+      <div class="text-xs flex gap-5 pt-2">
         <label>
           Edge server
           <input id="serverUrl" autocomplete="off" />
@@ -192,37 +109,66 @@
           Name
           <input id="username" autocomplete="name" value="Driver" />
         </label>
-      </section>
+      </div>
 
-      <section class="pad" aria-label="Joystick">
-        <div id="joystick"></div>
-      </section>
+      <div class="flex gap-4 text-center items-center pt-2">
+        <div class="flex items-center gap-2 w-full">
+          <div class="w-12">HP</div>
+          <div class="flex-1 bg-gray-300 rounded-full h-2">
+            <div class="bg-blue-500 h-2 rounded-full" style="width: 45%"></div>
+          </div>
+        </div>
 
-      <section class="telemetry" aria-live="polite">
+        <div class="border-l-2 h-6"></div>
+
+        <div class="flex items-center gap-2 w-full">
+          <div class="w-16">Shield</div>
+          <div class="flex-1 bg-gray-300 rounded-full h-2">
+            <div class="bg-blue-500 h-2 rounded-full" style="width: 45%"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex gap-4 pt-2">
+        <div class="pad" aria-label="Joystick">
+          <div id="joystick" class=""></div>
+        </div>
+
+        <div class="actions flex-1 grid grid-cols-2 gap-2">
+          <button id="connect" class="border-2 p-2 bg-green-500" type="button">
+            Connect
+          </button>
+
+          <button id="start" class="border-2 p-2 bg-green-500" type="button">
+            Start
+          </button>
+
+          <button id="fire" class="danger col-span-2 border-2 p-2 bg-red-500">
+            Fire
+          </button>
+        </div>
+      </div>
+
+      <section class="flex gap-5 ps-5" aria-live="polite">
         <div>Throttle <strong id="throttle">0.00</strong></div>
         <div>Steering <strong id="steering">0.00</strong></div>
       </section>
-
-      <footer class="actions">
-        <button id="connect" class="primary" type="button">Connect</button>
-        <button id="start" type="button">Start</button>
-        <button id="fire" class="danger" type="button">Fire</button>
-      </footer>
-    </main>
+    </div>
 
     <script>
-      const serverUrlInput = document.querySelector('#serverUrl');
-      const playerInput = document.querySelector('#player');
-      const usernameInput = document.querySelector('#username');
-      const statusDot = document.querySelector('#statusDot');
-      const statusText = document.querySelector('#statusText');
-      const throttleText = document.querySelector('#throttle');
-      const steeringText = document.querySelector('#steering');
-      const connectButton = document.querySelector('#connect');
-      const startButton = document.querySelector('#start');
-      const fireButton = document.querySelector('#fire');
+      const serverUrlInput = document.querySelector("#serverUrl");
+      const playerInput = document.querySelector("#player");
+      const usernameInput = document.querySelector("#username");
+      const statusDot = document.querySelector("#statusDot");
+      const statusText = document.querySelector("#statusText");
+      const throttleText = document.querySelector("#throttle");
+      const steeringText = document.querySelector("#steering");
+      const connectButton = document.querySelector("#connect");
+      const startButton = document.querySelector("#start");
+      const fireButton = document.querySelector("#fire");
 
-      const defaultProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const defaultProtocol =
+        window.location.protocol === "https:" ? "wss:" : "ws:";
       serverUrlInput.value = `${defaultProtocol}//${window.location.host}/connect`;
 
       let socket;
@@ -230,37 +176,37 @@
       let latest = { throttle: 0, steering: 0, fire: false };
       let sendTimer;
 
-      const joystickZone = document.querySelector('#joystick');
+      const joystickZone = document.querySelector("#joystick");
 
       if (window.nipplejs) {
         const joystick = nipplejs.create({
           zone: joystickZone,
-          mode: 'static',
-          position: { left: '50%', top: '50%' },
-          color: '#f5f7fa',
-          size: 190
+          mode: "static",
+          position: { left: "50%", top: "50%" },
+          color: "#f5f7fa",
+          size: 190,
         });
 
-        joystick.on('move', (_event, data) => {
+        joystick.on("move", (_event, data) => {
           latest = {
             ...latest,
             throttle: clamp(-(data.vector?.y ?? 0)),
-            steering: clamp(data.vector?.x ?? 0)
+            steering: clamp(data.vector?.x ?? 0),
           };
           renderAxes();
         });
 
-        joystick.on('end', stopMoving);
+        joystick.on("end", stopMoving);
       } else {
-        joystickZone.style.border = '1px solid var(--line)';
-        joystickZone.style.borderRadius = '50%';
-        joystickZone.addEventListener('pointerdown', handleFallbackPointer);
-        joystickZone.addEventListener('pointermove', handleFallbackPointer);
-        joystickZone.addEventListener('pointerup', stopMoving);
-        joystickZone.addEventListener('pointercancel', stopMoving);
+        joystickZone.style.border = "1px solid var(--line)";
+        joystickZone.style.borderRadius = "50%";
+        joystickZone.addEventListener("pointerdown", handleFallbackPointer);
+        joystickZone.addEventListener("pointermove", handleFallbackPointer);
+        joystickZone.addEventListener("pointerup", stopMoving);
+        joystickZone.addEventListener("pointercancel", stopMoving);
       }
 
-      connectButton.addEventListener('click', () => {
+      connectButton.addEventListener("click", () => {
         if (socket?.readyState === WebSocket.OPEN) {
           socket.close();
           return;
@@ -268,45 +214,47 @@
         connect();
       });
 
-      startButton.addEventListener('click', () => sendJson({ type: 'start' }));
+      startButton.addEventListener("click", () => sendJson({ type: "start" }));
 
-      fireButton.addEventListener('pointerdown', () => {
+      fireButton.addEventListener("pointerdown", () => {
         latest.fire = true;
         sendInput();
       });
 
-      fireButton.addEventListener('pointerup', () => {
+      fireButton.addEventListener("pointerup", () => {
         latest.fire = false;
         sendInput();
       });
 
-      fireButton.addEventListener('pointercancel', () => {
+      fireButton.addEventListener("pointercancel", () => {
         latest.fire = false;
         sendInput();
       });
 
       function connect() {
         const url = new URL(serverUrlInput.value);
-        url.searchParams.set('type', 'controller');
-        url.searchParams.set('player', playerInput.value);
-        url.searchParams.set('username', usernameInput.value || 'Driver');
+        url.searchParams.set("type", "controller");
+        url.searchParams.set("player", playerInput.value);
+        url.searchParams.set("username", usernameInput.value || "Driver");
 
-        setStatus('Connecting', false);
+        setStatus("Connecting", false);
         socket = new WebSocket(url);
 
-        socket.addEventListener('open', () => {
-          setStatus('Connected', true);
-          connectButton.textContent = 'Disconnect';
+        socket.addEventListener("open", () => {
+          setStatus("Connected", true);
+          connectButton.textContent = "Disconnect";
           sendTimer = window.setInterval(sendInput, 50);
         });
 
-        socket.addEventListener('close', () => {
+        socket.addEventListener("close", () => {
           window.clearInterval(sendTimer);
-          setStatus('Disconnected', false);
-          connectButton.textContent = 'Connect';
+          setStatus("Disconnected", false);
+          connectButton.textContent = "Connect";
         });
 
-        socket.addEventListener('error', () => setStatus('Connection error', false));
+        socket.addEventListener("error", () =>
+          setStatus("Connection error", false),
+        );
       }
 
       function sendInput() {
@@ -315,7 +263,7 @@
           steering: latest.steering,
           fire: latest.fire,
           seq: ++seq,
-          ts: Date.now()
+          ts: Date.now(),
         });
       }
 
@@ -335,7 +283,7 @@
         latest = {
           ...latest,
           throttle: clamp((rect.top + radius - event.clientY) / radius),
-          steering: clamp((event.clientX - rect.left - radius) / radius)
+          steering: clamp((event.clientX - rect.left - radius) / radius),
         };
         renderAxes();
       }
@@ -348,7 +296,7 @@
 
       function setStatus(text, connected) {
         statusText.textContent = text;
-        statusDot.classList.toggle('connected', connected);
+        statusDot.classList.toggle("connected", connected);
       }
 
       function renderAxes() {
