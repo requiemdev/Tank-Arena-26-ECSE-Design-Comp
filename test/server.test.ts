@@ -53,8 +53,8 @@ describe('HTTP implementation', () => {
     };
     engine.attachController('p1', socket as never);
     engine.attachController('p2', { ...socket } as never);
-    engine.setPlayerReady('p1', true);
-    engine.setPlayerReady('p2', true);
+    engine.getState().players.p1.ready = true;
+    engine.getState().players.p2.ready = true;
 
     const firstStart = await app.inject({
       method: 'POST',

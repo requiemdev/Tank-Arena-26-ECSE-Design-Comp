@@ -115,6 +115,8 @@ describe('GameEngine', () => {
     state.status = 'ACTIVE';
     state.players.p1.username = 'Ada';
     state.players.p2.username = 'Grace';
+    state.players.p1.ready = true;
+    state.players.p2.ready = true;
 
     for (let hit = 0; hit < 10; hit += 1) {
       engine.registerHit('p2');
@@ -124,6 +126,8 @@ describe('GameEngine', () => {
     assert.equal(engine.getState().winner, 'p1');
     assert.equal(engine.getState().players.p2.health, 0);
     assert.equal(engine.getState().players.p1.score, 100);
+    assert.equal(engine.getState().players.p1.ready, false);
+    assert.equal(engine.getState().players.p2.ready, false);
     assert.equal(results.length, 1);
     assert.deepEqual(
       {
@@ -174,7 +178,7 @@ describe('GameEngine', () => {
     assert.equal(publicState.players.p1.controllerConnected, true);
   });
 
-  it('requires both connected controllers to be ready before countdown starts', () => {
+  it('automatically starts countdown once both connected controllers are ready', () => {
     const engine = new GameEngine();
     const p1Controller = createOpenSocket();
     const p2Controller = createOpenSocket();
@@ -187,7 +191,6 @@ describe('GameEngine', () => {
 
     assert.equal(engine.attachController('p2', p2Controller), true);
     assert.equal(engine.setPlayerReady('p2', true), true);
-    assert.equal(engine.startCountdown(), true);
     assert.equal(engine.getPublicState().status, 'COUNTDOWN');
 
     engine.resetEngine();

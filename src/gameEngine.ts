@@ -161,6 +161,11 @@ export class GameEngine {
     }
 
     this.state.players[player].ready = ready;
+    if (this.canStartMatch()) {
+      this.startCountdown();
+      return true;
+    }
+
     this.broadcastState();
     return true;
   }
@@ -233,6 +238,8 @@ export class GameEngine {
     this.clearTimers();
     this.state.status = 'ENDED';
     this.state.winner = winner;
+    this.state.players.p1.ready = false;
+    this.state.players.p2.ready = false;
     this.broadcastState();
     this.queueResult();
   }

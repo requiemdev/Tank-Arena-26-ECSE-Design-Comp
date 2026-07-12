@@ -53,15 +53,24 @@
         background: var(--accent);
       }
 
+      .hidden {
+        display: none !important;
+      }
+
       #joystick {
-        width: 25vw;
+        width: min(42vw, 320px);
         aspect-ratio: 1;
         position: relative;
+        border: 1px solid var(--line);
+        border-radius: 50%;
+        background: var(--panel);
+        touch-action: none;
+        user-select: none;
       }
 
       .actions {
         display: grid;
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: 1fr;
         gap: 10px;
       }
 
@@ -99,7 +108,7 @@
         </div>
       </div>
 
-      <div class="text-xs flex gap-5 pt-2">
+      <section id="preGame" class="text-xs grid gap-2 pt-2">
         <label>
           Edge server
           <input id="serverUrl" autocomplete="off" />
@@ -115,7 +124,17 @@
           Name
           <input id="username" autocomplete="name" value="Driver" />
         </label>
-      </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <button id="connect" class="border-2 p-2 bg-green-500" type="button">
+            Connect
+          </button>
+
+          <button id="ready" class="border-2 p-2 bg-blue-500" type="button">
+            Ready
+          </button>
+        </div>
+      </section>
 
       <div class="flex gap-4 text-center items-center pt-2">
         <div class="flex items-center gap-2 w-full">
@@ -135,29 +154,19 @@
         </div>
       </div>
 
-      <div class="flex gap-4 pt-2">
-        <div class="pad" aria-label="Joystick">
-          <div id="joystick" class=""></div>
+      <section id="inGame" class="hidden pt-2">
+        <div class="flex gap-4">
+          <div class="pad w-1/2" aria-label="Joystick">
+            <div id="joystick" class=""></div>
+          </div>
+
+          <div class="actions w-1/2">
+            <button id="fire" class="danger border-2 p-2 bg-red-500">
+              Fire
+            </button>
+          </div>
         </div>
-
-        <div class="actions flex-1 grid grid-cols-2 gap-2">
-          <button id="connect" class="border-2 p-2 bg-green-500" type="button">
-            Connect
-          </button>
-
-          <button id="start" class="border-2 p-2 bg-green-500" type="button">
-            Start
-          </button>
-
-          <button id="ready" class="border-2 p-2 bg-blue-500" type="button">
-            Ready
-          </button>
-
-          <button id="fire" class="danger col-span-2 border-2 p-2 bg-red-500">
-            Fire
-          </button>
-        </div>
-      </div>
+      </section>
 
       <section class="grid grid-cols-2 gap-2 pt-2" aria-live="polite">
         <div id="p1Card" class="border-2 p-2">
@@ -189,12 +198,14 @@
       const throttleText = document.querySelector("#throttle");
       const steeringText = document.querySelector("#steering");
       const connectButton = document.querySelector("#connect");
-      const startButton = document.querySelector("#start");
       const readyButton = document.querySelector("#ready");
       const fireButton = document.querySelector("#fire");
       const matchStateText = document.querySelector("#matchState");
       const p1StateText = document.querySelector("#p1State");
       const p2StateText = document.querySelector("#p2State");
+      const preGame = document.querySelector("#preGame");
+      const inGame = document.querySelector("#inGame");
+      const joystickZone = document.querySelector("#joystick");
 
       const defaultProtocol =
         window.location.protocol === "https:" ? "wss:" : "ws:";
@@ -206,36 +217,8 @@
       let sendTimer;
       let stateTimer;
       let gameState;
-
-      const joystickZone = document.querySelector("#joystick");
-
-      if (window.nipplejs) {
-        const joystick = nipplejs.create({
-          zone: joystickZone,
-          mode: "static",
-          position: { left: "50%", top: "50%" },
-          color: "#f5f7fa",
-          size: 190,
-        });
-
-        joystick.on("move", (_event, data) => {
-          latest = {
-            ...latest,
-            throttle: clamp(-(data.vector?.y ?? 0)),
-            steering: clamp(data.vector?.x ?? 0),
-          };
-          renderAxes();
-        });
-
-        joystick.on("end", stopMoving);
-      } else {
-        joystickZone.style.border = "1px solid var(--line)";
-        joystickZone.style.borderRadius = "50%";
-        joystickZone.addEventListener("pointerdown", handleFallbackPointer);
-        joystickZone.addEventListener("pointermove", handleFallbackPointer);
-        joystickZone.addEventListener("pointerup", stopMoving);
-        joystickZone.addEventListener("pointercancel", stopMoving);
-      }
+      let joystick;
+      let fallbackJoystickReady = false;
 
       connectButton.addEventListener("click", () => {
         if (socket?.readyState === WebSocket.OPEN) {
@@ -245,7 +228,6 @@
         connect();
       });
 
-      startButton.addEventListener("click", () => sendJson({ type: "start" }));
       readyButton.addEventListener("click", () => {
         const player = playerInput.value;
         const nextReady = !gameState?.players?.[player]?.ready;
@@ -364,6 +346,14 @@
             : "Waiting for both players to ready up";
         }
 
+        const inMatch = gameState.status === "COUNTDOWN" || gameState.status === "ACTIVE";
+        preGame.classList.toggle("hidden", inMatch);
+        inGame.classList.toggle("hidden", !inMatch);
+        if (inMatch) {
+          window.requestAnimationFrame(setupJoystick);
+        } else {
+          teardownJoystick();
+        }
         syncPlayerOptions();
         updateControls();
       }
@@ -407,7 +397,6 @@
         connectButton.disabled = selectedSlotLocked;
         readyButton.disabled = !connected || !lobbyStatus;
         readyButton.textContent = ready ? "Unready" : "Ready";
-        startButton.disabled = !connected || !bothReady() || !lobbyStatus;
         fireButton.disabled = !connected || gameState?.status !== "ACTIVE";
       }
 
@@ -428,8 +417,63 @@
         }
       }
 
+      function setupJoystick() {
+        if (joystick || fallbackJoystickReady) {
+          return;
+        }
+
+        const rect = joystickZone.getBoundingClientRect();
+        if (!rect.width) {
+          return;
+        }
+
+        if (!window.nipplejs) {
+          setupFallbackJoystick();
+          return;
+        }
+
+        const size = Math.min(190, rect.width);
+        joystick = nipplejs.create({
+          zone: joystickZone,
+          mode: "static",
+          position: { left: `${rect.width / 2}px`, top: `${rect.height / 2}px` },
+          color: "#f5f7fa",
+          size,
+        });
+
+        joystick.on("move", (_event, data) => {
+          latest = {
+            ...latest,
+            throttle: clamp(-(data.vector?.y ?? 0)),
+            steering: clamp(data.vector?.x ?? 0),
+          };
+          renderAxes();
+        });
+
+        joystick.on("end", stopMoving);
+      }
+
+      function setupFallbackJoystick() {
+        fallbackJoystickReady = true;
+        joystickZone.addEventListener("pointerdown", handleFallbackPointer);
+        joystickZone.addEventListener("pointermove", handleFallbackPointer);
+        joystickZone.addEventListener("pointerup", stopMoving);
+        joystickZone.addEventListener("pointercancel", stopMoving);
+      }
+
+      function teardownJoystick() {
+        if (joystick) {
+          joystick.destroy();
+          joystick = null;
+        }
+
+        if (latest.throttle !== 0 || latest.steering !== 0) {
+          stopMoving();
+        }
+      }
+
       function handleFallbackPointer(event) {
-        if (event.buttons === 0) {
+        if (event.type === "pointermove" && event.buttons === 0) {
           return;
         }
 
