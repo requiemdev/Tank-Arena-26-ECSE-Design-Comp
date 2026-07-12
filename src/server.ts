@@ -15,7 +15,7 @@ export interface EdgeServerOptions {
 
 export function buildServer(options: EdgeServerOptions = {}) {
   const app = Fastify({
-    logger: options.logger ?? true
+    logger: options.logger ?? true 
   });
   const gameEngine = options.gameEngine ?? new GameEngine();
   const wss = new WebSocketServer({
@@ -39,7 +39,7 @@ export function buildServer(options: EdgeServerOptions = {}) {
 
   app.post('/start', async (_request, reply) => {
     const started = gameEngine.startCountdown();
-    return reply.code(started ? 202 : 409).send({
+    return reply.code(started ? 202 : 409).send({ //202 accepted, 409 conflict
       started,
       state: gameEngine.getPublicState()
     });
