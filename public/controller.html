@@ -65,6 +65,12 @@
         gap: 10px;
       }
 
+      button:disabled,
+      select:disabled,
+      input:disabled {
+        opacity: 0.55;
+      }
+
       @media (min-width: 780px) {
         main {
           max-width: 860px;
@@ -143,10 +149,29 @@
             Start
           </button>
 
+          <button id="ready" class="border-2 p-2 bg-blue-500" type="button">
+            Ready
+          </button>
+
           <button id="fire" class="danger col-span-2 border-2 p-2 bg-red-500">
             Fire
           </button>
         </div>
+      </div>
+
+      <section class="grid grid-cols-2 gap-2 pt-2" aria-live="polite">
+        <div id="p1Card" class="border-2 p-2">
+          <div class="font-bold">Player 1</div>
+          <div id="p1State" class="text-xs text-gray-300">Open</div>
+        </div>
+        <div id="p2Card" class="border-2 p-2">
+          <div class="font-bold">Player 2</div>
+          <div id="p2State" class="text-xs text-gray-300">Open</div>
+        </div>
+      </section>
+
+      <div id="matchState" class="pt-2 font-bold" aria-live="polite">
+        Waiting for players
       </div>
 
       <section class="flex gap-5 ps-5" aria-live="polite">
@@ -165,7 +190,11 @@
       const steeringText = document.querySelector("#steering");
       const connectButton = document.querySelector("#connect");
       const startButton = document.querySelector("#start");
+      const readyButton = document.querySelector("#ready");
       const fireButton = document.querySelector("#fire");
+      const matchStateText = document.querySelector("#matchState");
+      const p1StateText = document.querySelector("#p1State");
+      const p2StateText = document.querySelector("#p2State");
 
       const defaultProtocol =
         window.location.protocol === "https:" ? "wss:" : "ws:";
@@ -175,6 +204,8 @@
       let seq = 0;
       let latest = { throttle: 0, steering: 0, fire: false };
       let sendTimer;
+      let stateTimer;
+      let gameState;
 
       const joystickZone = document.querySelector("#joystick");
 
@@ -215,6 +246,11 @@
       });
 
       startButton.addEventListener("click", () => sendJson({ type: "start" }));
+      readyButton.addEventListener("click", () => {
+        const player = playerInput.value;
+        const nextReady = !gameState?.players?.[player]?.ready;
+        sendJson({ type: "ready", ready: nextReady });
+      });
 
       fireButton.addEventListener("pointerdown", () => {
         latest.fire = true;
@@ -243,13 +279,27 @@
         socket.addEventListener("open", () => {
           setStatus("Connected", true);
           connectButton.textContent = "Disconnect";
+          playerInput.disabled = true;
+          usernameInput.disabled = true;
           sendTimer = window.setInterval(sendInput, 50);
+          requestState();
         });
 
         socket.addEventListener("close", () => {
           window.clearInterval(sendTimer);
           setStatus("Disconnected", false);
           connectButton.textContent = "Connect";
+          playerInput.disabled = false;
+          usernameInput.disabled = false;
+          updateControls();
+        });
+
+        socket.addEventListener("message", (event) => {
+          const message = parseJson(event.data);
+          if (message?.type === "state") {
+            gameState = message.state;
+            renderState();
+          }
         });
 
         socket.addEventListener("error", () =>
@@ -270,6 +320,111 @@
       function sendJson(payload) {
         if (socket?.readyState === WebSocket.OPEN) {
           socket.send(JSON.stringify(payload));
+        }
+      }
+
+      async function requestState() {
+        sendJson({ type: "state" });
+
+        try {
+          const url = new URL(serverUrlInput.value);
+          url.protocol = url.protocol === "wss:" ? "https:" : "http:";
+          url.pathname = "/state";
+          url.search = "";
+          const response = await fetch(url);
+          if (response.ok) {
+            gameState = await response.json();
+            renderState();
+          }
+        } catch {
+          // The WebSocket state push remains the primary update path.
+        }
+      }
+
+      function renderState() {
+        if (!gameState) {
+          return;
+        }
+
+        const { p1, p2 } = gameState.players;
+        p1StateText.textContent = formatPlayerState(p1);
+        p2StateText.textContent = formatPlayerState(p2);
+
+        if (gameState.status === "COUNTDOWN") {
+          matchStateText.textContent = `Starting in ${gameState.countdownSeconds}`;
+        } else if (gameState.status === "ACTIVE") {
+          matchStateText.textContent = `Match active: ${gameState.remainingSeconds}s left`;
+        } else if (gameState.status === "ENDED") {
+          matchStateText.textContent = gameState.winner
+            ? `${gameState.players[gameState.winner].username} wins`
+            : "Match ended in a draw";
+        } else {
+          matchStateText.textContent = bothReady()
+            ? "Both players ready"
+            : "Waiting for both players to ready up";
+        }
+
+        syncPlayerOptions();
+        updateControls();
+      }
+
+      function formatPlayerState(player) {
+        const connection = player.controllerConnected ? "Locked" : "Open";
+        const ready = player.ready ? "Ready" : "Not ready";
+        const tank = player.tankConnected ? "tank online" : "tank offline";
+        return `${player.username}: ${connection}, ${ready}, ${tank}`;
+      }
+
+      function syncPlayerOptions() {
+        const selected = playerInput.value;
+        const connected = socket?.readyState === WebSocket.OPEN;
+        for (const option of playerInput.options) {
+          const player = gameState.players[option.value];
+          option.disabled =
+            player.controllerConnected && !(connected && option.value === selected);
+          option.textContent = `${option.value === "p1" ? "Player 1" : "Player 2"}${
+            option.disabled ? " (locked)" : ""
+          }`;
+        }
+
+        if (playerInput.selectedOptions[0]?.disabled) {
+          const openOption = Array.from(playerInput.options).find(
+            (option) => !option.disabled,
+          );
+          if (openOption) {
+            playerInput.value = openOption.value;
+          }
+        }
+      }
+
+      function updateControls() {
+        const connected = socket?.readyState === WebSocket.OPEN;
+        const player = gameState?.players?.[playerInput.value];
+        const ready = Boolean(player?.ready);
+        const lobbyStatus = !gameState || gameState.status === "LOBBY" || gameState.status === "ENDED";
+        const selectedSlotLocked = Boolean(!connected && player?.controllerConnected);
+
+        connectButton.disabled = selectedSlotLocked;
+        readyButton.disabled = !connected || !lobbyStatus;
+        readyButton.textContent = ready ? "Unready" : "Ready";
+        startButton.disabled = !connected || !bothReady() || !lobbyStatus;
+        fireButton.disabled = !connected || gameState?.status !== "ACTIVE";
+      }
+
+      function bothReady() {
+        return Boolean(
+          gameState?.players?.p1?.controllerConnected &&
+            gameState?.players?.p2?.controllerConnected &&
+            gameState?.players?.p1?.ready &&
+            gameState?.players?.p2?.ready,
+        );
+      }
+
+      function parseJson(value) {
+        try {
+          return JSON.parse(value);
+        } catch {
+          return null;
         }
       }
 
@@ -307,6 +462,10 @@
       function clamp(value) {
         return Math.max(-1, Math.min(1, value));
       }
+
+      stateTimer = window.setInterval(requestState, 1000);
+      requestState();
+      updateControls();
     </script>
   </body>
 </html>

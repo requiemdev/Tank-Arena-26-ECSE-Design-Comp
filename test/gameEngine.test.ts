@@ -39,6 +39,7 @@ describe('GameEngine', () => {
           username: 'Player 1',
           health: 100,
           score: 0,
+          ready: false,
           controllerConnected: false,
           tankConnected: false
         },
@@ -47,6 +48,7 @@ describe('GameEngine', () => {
           username: 'Player 2',
           health: 100,
           score: 0,
+          ready: false,
           controllerConnected: false,
           tankConnected: false
         }
@@ -167,7 +169,36 @@ describe('GameEngine', () => {
     assert.equal(publicState.players.p1.username, 'Ada');
     assert.equal(publicState.players.p1.score, 0);
     assert.equal(publicState.players.p1.health, 100);
+    assert.equal(publicState.players.p1.ready, false);
     assert.equal(publicState.players.p1.tankConnected, true);
     assert.equal(publicState.players.p1.controllerConnected, true);
+  });
+
+  it('requires both connected controllers to be ready before countdown starts', () => {
+    const engine = new GameEngine();
+    const p1Controller = createOpenSocket();
+    const p2Controller = createOpenSocket();
+
+    assert.equal(engine.startCountdown(), false);
+
+    assert.equal(engine.attachController('p1', p1Controller), true);
+    assert.equal(engine.setPlayerReady('p1', true), true);
+    assert.equal(engine.startCountdown(), false);
+
+    assert.equal(engine.attachController('p2', p2Controller), true);
+    assert.equal(engine.setPlayerReady('p2', true), true);
+    assert.equal(engine.startCountdown(), true);
+    assert.equal(engine.getPublicState().status, 'COUNTDOWN');
+
+    engine.resetEngine();
+  });
+
+  it('rejects duplicate live controllers and tanks for a player slot', () => {
+    const engine = new GameEngine();
+
+    assert.equal(engine.attachController('p1', createOpenSocket()), true);
+    assert.equal(engine.attachController('p1', createOpenSocket()), false);
+    assert.equal(engine.attachTank('p1', createOpenSocket()), true);
+    assert.equal(engine.attachTank('p1', createOpenSocket()), false);
   });
 });

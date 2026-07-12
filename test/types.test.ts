@@ -130,6 +130,7 @@ describe('publicGameState', () => {
           username: 'Ada',
           health: 100,
           score: 10,
+          ready: true,
           socket: tankSocket as WebSocket,
           controllerSocket: controllerSocket as WebSocket
         },
@@ -138,6 +139,7 @@ describe('publicGameState', () => {
           username: 'Grace',
           health: 80,
           score: 0,
+          ready: false,
           socket: null,
           controllerSocket: null
         }
@@ -148,8 +150,10 @@ describe('publicGameState', () => {
 
     assert.equal(publicState.players.p1.tankConnected, true);
     assert.equal(publicState.players.p1.controllerConnected, true);
+    assert.equal(publicState.players.p1.ready, true);
     assert.equal(publicState.players.p2.tankConnected, false);
     assert.equal(publicState.players.p2.controllerConnected, false);
+    assert.equal(publicState.players.p2.ready, false);
     assert.equal('socket' in publicState.players.p1, false);
     assert.equal('controllerSocket' in publicState.players.p1, false);
   });

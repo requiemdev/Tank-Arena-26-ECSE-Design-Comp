@@ -47,6 +47,14 @@ describe('HTTP implementation', () => {
       engine.resetEngine();
       await app.close();
     });
+    const socket = {
+      readyState: 1,
+      send() {}
+    };
+    engine.attachController('p1', socket as never);
+    engine.attachController('p2', { ...socket } as never);
+    engine.setPlayerReady('p1', true);
+    engine.setPlayerReady('p2', true);
 
     const firstStart = await app.inject({
       method: 'POST',
@@ -62,6 +70,23 @@ describe('HTTP implementation', () => {
     assert.equal(firstStart.json().state.status, 'COUNTDOWN');
     assert.equal(duplicateStart.statusCode, 409);
     assert.equal(duplicateStart.json().started, false);
+  });
+
+  it('rejects start requests until both controller slots are ready', async (t) => {
+    const engine = new GameEngine();
+    const app = buildServer({ gameEngine: engine, logger: false });
+    t.after(async () => {
+      await app.close();
+    });
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/start'
+    });
+
+    assert.equal(response.statusCode, 409);
+    assert.equal(response.json().started, false);
+    assert.equal(response.json().state.status, 'LOBBY');
   });
 
   it('applies hit requests to valid players and rejects invalid player params', async (t) => {

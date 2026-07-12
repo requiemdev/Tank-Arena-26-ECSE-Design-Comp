@@ -103,11 +103,14 @@ export function buildServer(options: EdgeServerOptions = {}) {
 }
 
 function routeController(gameEngine: GameEngine, socket: WebSocket, player: PlayerSlot, username?: string): void {
-  gameEngine.attachController(player, socket, username);
+  if (!gameEngine.attachController(player, socket, username)) {
+    socket.close(1008, `${player} controller is already connected`);
+    return;
+  }
 
   socket.on('message', (data) => {
     const payload = rawDataToString(data);
-    if (handleControlMessage(gameEngine, payload, player)) {
+    if (handleControlMessage(gameEngine, payload, player, socket)) {
       return;
     }
 
@@ -125,11 +128,14 @@ function routeController(gameEngine: GameEngine, socket: WebSocket, player: Play
 }
 
 function routeTank(gameEngine: GameEngine, socket: WebSocket, player: PlayerSlot, username?: string): void {
-  gameEngine.attachTank(player, socket, username);
+  if (!gameEngine.attachTank(player, socket, username)) {
+    socket.close(1008, `${player} tank is already connected`);
+    return;
+  }
 
   socket.on('message', (data) => {
     const payload = rawDataToString(data);
-    if (!handleControlMessage(gameEngine, payload, player)) {
+    if (!handleControlMessage(gameEngine, payload, player, socket)) {
       socket.send(JSON.stringify({ type: 'ack', source: 'tank', received: true }));
     }
   });
@@ -148,7 +154,7 @@ function routeSpectator(gameEngine: GameEngine, socket: WebSocket): void {
   gameEngine.addSpectator(socket);
 
   socket.on('message', (data) => {
-    handleControlMessage(gameEngine, rawDataToString(data));
+    handleControlMessage(gameEngine, rawDataToString(data), undefined, socket);
   });
 
   socket.on('close', () => {
@@ -160,7 +166,12 @@ function routeSpectator(gameEngine: GameEngine, socket: WebSocket): void {
   });
 }
 
-function handleControlMessage(gameEngine: GameEngine, payload: string, defaultPlayer?: PlayerSlot): boolean {
+function handleControlMessage(
+  gameEngine: GameEngine,
+  payload: string,
+  defaultPlayer?: PlayerSlot,
+  socket?: WebSocket
+): boolean {
   const message = parseControlMessage(payload);
   if (!message) {
     return false;
@@ -173,6 +184,11 @@ function handleControlMessage(gameEngine: GameEngine, payload: string, defaultPl
     case 'reset':
       gameEngine.resetEngine();
       return true;
+    case 'ready':
+      if (defaultPlayer) {
+        gameEngine.setPlayerReady(defaultPlayer, message.ready);
+      }
+      return true;
     case 'hit': {
       const target = message.target ?? defaultPlayer;
       if (!target) {
@@ -182,6 +198,9 @@ function handleControlMessage(gameEngine: GameEngine, payload: string, defaultPl
       return true;
     }
     case 'state':
+      if (socket?.readyState === WebSocket.OPEN) {
+        socket.send(JSON.stringify({ type: 'state', state: gameEngine.getPublicState() }));
+      }
       return true;
   }
 }
@@ -189,6 +208,7 @@ function handleControlMessage(gameEngine: GameEngine, payload: string, defaultPl
 function parseControlMessage(payload: string):
   | { type: 'start' }
   | { type: 'reset' }
+  | { type: 'ready'; ready: boolean }
   | { type: 'state' }
   | { type: 'hit'; target?: PlayerSlot }
   | null {
@@ -201,6 +221,10 @@ function parseControlMessage(payload: string):
     const record = data as Record<string, unknown>;
     if (record.type === 'start' || record.type === 'reset' || record.type === 'state') {
       return { type: record.type };
+    }
+
+    if (record.type === 'ready') {
+      return { type: 'ready', ready: record.ready !== false };
     }
 
     if (record.type === 'hit') {
