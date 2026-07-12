@@ -12,6 +12,6 @@ enum SensorDirection {
 };
 
 // The function is triggered when a sensor is hit.
-void initialiseSensors(std::function<void(SensorDirection)> function);
-
+void initialiseSensors(/*std::function<void(SensorDirection)> function*/);
+// void onSensorHit(SensorDirection sensor_direction);
 #endif // !SENSORS_H

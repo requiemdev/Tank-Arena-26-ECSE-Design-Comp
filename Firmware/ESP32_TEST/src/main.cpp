@@ -9,10 +9,6 @@
 
 #define SERIAL_BAUD_RATE 115200
 
-void onSensorHit(SensorDirection sensor_direction) {
-  Serial.printf("Sensor %d detected!\n", sensor_direction);
-}
-
 // Runs once at start.
 void setup() {
   Serial.begin(SERIAL_BAUD_RATE);
@@ -24,7 +20,7 @@ void setup() {
   pwmSetup();
 
   // Initialise Sensors
-  initialiseSensors(onSensorHit);
+  initialiseSensors();
 
   // Initialise Motor Controller
   setTankMotorsEnabled(true);
@@ -41,7 +37,7 @@ void loop() {
 #ifdef USE_TEST_CODE
 
   int digital_read_value = digitalRead(PIN_VCOMP1);
-  Serial.printf("Digital Read Value = %d\n", digital_read_value);
+  // Serial.printf("Digital Read Value = %d\n", digital_read_value);
   digitalWrite(PIN_LED, digital_read_value); // HIGH or LOW.
 
   setTankLed(HIGH);
