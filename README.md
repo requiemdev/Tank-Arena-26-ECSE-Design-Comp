@@ -16,6 +16,16 @@ npm run dev
 
 Open `http://<router-ip>:8080/controller` from a phone or laptop on the same Wi-Fi.
 
+## Supabase Setup
+
+Create the leaderboard table before enabling cloud sync:
+
+1. Open Supabase dashboard.
+2. Go to SQL Editor.
+3. Run `supabase/schema.sql`.
+
+Set `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` in `.env`. Match results stay in local SQLite until Supabase sync succeeds.
+
 ## Connect a Robot
 
 On the robot or a process that can reach the robot hardware API:
