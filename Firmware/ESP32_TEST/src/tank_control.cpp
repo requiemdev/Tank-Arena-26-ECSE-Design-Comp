@@ -60,6 +60,7 @@ void setTankMotors(float throttle, float steering) {
     } else if (throttle < 0) { // Move backward.
         SET_LEFT_MOTOR_BACKWARD;
         SET_RIGHT_MOTOR_BACKWARD;
+        throttle = -throttle;
     
     } else { // Stop motors.
         setTankMotorDirection(TankMotor::MOTOR_A, MotorDirection::NO_DIRECTION);
