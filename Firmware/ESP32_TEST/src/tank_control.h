@@ -30,10 +30,8 @@ enum MotorDirection {
 #define STEERING_FACTOR 1
 #define TURRET_ROTATION_FACTOR 100
 
-
-// Set the rotation of the servo depending on factor between -1 and 1.
-// Factor: -1 = Full CW, +1 = Full CCW.
-void setServoRotation(float factor);
+// Set rotation of servo. At most one condition will be true at the same time.
+void setServoRotation(uint8_t acw_rotation, uint8_t cw_rotation);
 
 // Set the IR emitter to ON or OFF depending on the value.
 // Value should be LOW (0x0) or HIGH (0x1).

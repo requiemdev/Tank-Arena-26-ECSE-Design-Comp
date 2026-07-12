@@ -1,6 +1,6 @@
 #include "sensors.h"
 
-std::function<void(SensorDirection)> detect_hit_function;
+//volatile std::function<void(SensorDirection)> detect_hit_function;
 
 const unsigned long DEBOUNCE_TIME_MS = 500;
 volatile unsigned long button_timer = 0;

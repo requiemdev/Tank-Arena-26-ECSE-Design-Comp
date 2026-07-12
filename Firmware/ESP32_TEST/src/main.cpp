@@ -24,12 +24,6 @@ void setup() {
 
   // Initialise Motor Controller
   setTankMotorsEnabled(true);
-
-#ifdef USE_TEST_CODE
-  // Set motors to backwards and right (change in testing).
-  setTankMotors(-1, 1);
-  
-#endif // USE_TEST_CODE
 }
 
 // Runs repeatedly after setup() is called.
@@ -41,14 +35,27 @@ void loop() {
   digitalWrite(PIN_LED, digital_read_value); // HIGH or LOW.
 
   setTankLed(HIGH);
-  setServoRotation(1); // Full forward rotation.
+  setServoRotation(1, 0); // ACW rotation.
+
+  // Set motors to forwards and left (change in testing).
+  setTankMotors(0.8, -0.2);
   
-  delay(500); // Milliseconds.
+  delay(5000); // Milliseconds.
 
   setTankLed(LOW);
-  setServoRotation(-1); // Full backward rotation.
+  setServoRotation(0, 1); // CW rotation.
 
-  delay(500); // ms
+  // Set motors to backwards and right (change in testing).
+  setTankMotors(-0.5, 0.8);
+
+  delay(5000); // ms
+
+  // Set to no rotation and moving. 
+
+  setServoRotation(0, 0);
+  setTankMotors(0, 0);
+
+  delay(5000);
 
 #endif // USE_TEST_CODE
 }

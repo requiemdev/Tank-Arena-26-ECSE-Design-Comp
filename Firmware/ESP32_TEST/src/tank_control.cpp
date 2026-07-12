@@ -2,8 +2,13 @@
 
 // At factor = -1, duty should be 1/6. At factor = 1, duty should be 5/6.
 
-void setServoRotation(float factor) {
-    uint16_t duty = factor * 13 * TURRET_ROTATION_FACTOR + 2048;
+void setServoRotation(uint8_t acw_rotation, uint8_t cw_rotation) {
+    uint16_t duty = 2048;
+    if (acw_rotation) {
+        duty += 13 * TURRET_ROTATION_FACTOR;
+    } else if (cw_rotation) {
+        duty -= 13 * TURRET_ROTATION_FACTOR;
+    }
     pwmWrite(PWM_Channel::SERVO, duty);
 }
 
@@ -24,7 +29,7 @@ void setTankMotorDirection(TankMotor motor, MotorDirection direction) {
         IN2_PIN = PIN_AIN2;
     } else if (motor == TankMotor::MOTOR_B) {
         IN1_PIN = PIN_BIN1;
-        IN1_PIN = PIN_BIN2;
+        IN2_PIN = PIN_BIN2;
     } else {
         Serial.printf("Invalid motor %d configured!", motor);
         return;  // Invalid motor used.
