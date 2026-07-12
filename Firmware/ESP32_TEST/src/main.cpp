@@ -3,6 +3,7 @@
 
 #include "peripherals/pwm.h"
 #include "peripherals/sensors.h"
+#include "peripherals/websocket.h"
 #include "tank_control.h"
 
 #define USE_TEST_CODE // Enable/disable code used for testing peripherals
@@ -25,6 +26,8 @@ void setup() {
   // Initialise Motor Controller
   setTankMotorsEnabled(true);
 
+  websocket_init();
+
 #ifdef USE_TEST_CODE
   // Set motors to backwards and right (change in testing).
   setTankMotors(-1, 1);
@@ -34,21 +37,23 @@ void setup() {
 
 // Runs repeatedly after setup() is called.
 void loop() {
-#ifdef USE_TEST_CODE
+// #ifdef USE_TEST_CODE
 
-  int digital_read_value = digitalRead(PIN_VCOMP1);
-  // Serial.printf("Digital Read Value = %d\n", digital_read_value);
-  digitalWrite(PIN_LED, digital_read_value); // HIGH or LOW.
+//   int digital_read_value = digitalRead(PIN_VCOMP1);
+//   // Serial.printf("Digital Read Value = %d\n", digital_read_value);
+//   digitalWrite(PIN_LED, digital_read_value); // HIGH or LOW.
 
-  setTankLed(HIGH);
-  setServoRotation(1); // Full forward rotation.
+//   setTankLed(HIGH);
+//   setServoRotation(1); // Full forward rotation.
   
-  delay(500); // Milliseconds.
+//   delay(500); // Milliseconds.
 
-  setTankLed(LOW);
-  setServoRotation(-1); // Full backward rotation.
+//   setTankLed(LOW);
+//   setServoRotation(-1); // Full backward rotation.
 
-  delay(500); // ms
+//   delay(500); // ms
 
-#endif // USE_TEST_CODE
+// #endif // USE_TEST_CODE
+
+	void websocket_loop();
 }
