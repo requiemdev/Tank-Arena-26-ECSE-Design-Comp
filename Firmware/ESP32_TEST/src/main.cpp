@@ -3,6 +3,7 @@
 
 #include "peripherals/pwm.h"
 #include "peripherals/sensors.h"
+#include "peripherals/tank_timers.h"
 #include "tank_control.h"
 
 #define USE_TEST_CODE // Enable/disable code used for testing peripherals
@@ -24,15 +25,14 @@ void setup() {
 
   // Initialise Motor Controller
   setTankMotorsEnabled(true);
+
+  // Initialise timers.
+  initialiseTimers();
 }
 
 // Runs repeatedly after setup() is called.
 void loop() {
 #ifdef USE_TEST_CODE
-
-  int digital_read_value = digitalRead(PIN_VCOMP1);
-  // Serial.printf("Digital Read Value = %d\n", digital_read_value);
-  digitalWrite(PIN_LED, digital_read_value); // HIGH or LOW.
 
   setTankLed(HIGH);
   setServoRotation(1, 0); // ACW rotation.

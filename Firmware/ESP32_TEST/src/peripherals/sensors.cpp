@@ -12,6 +12,7 @@ void onSensorHit(SensorDirection sensor_direction) {
         button_pressed = true;
         button_timer = current_time;
         Serial.printf("Sensor %d detected!\n", sensor_direction);
+        startTimer(TimerNumber::SPEAKER_TIMER);
     }
 }
 
