@@ -55,5 +55,5 @@ void loop() {
 
 // #endif // USE_TEST_CODE
 
-	void websocket_loop();
+  websocket_loop();
 }
