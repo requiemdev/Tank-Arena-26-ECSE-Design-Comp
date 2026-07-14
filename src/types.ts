@@ -31,6 +31,8 @@ export interface PlayerInputs {
   steering: number;
   turret?: number;
   fire?: boolean;
+  left?: boolean;
+  right?: boolean;
   seq?: number;
   ts?: number;
 }
@@ -72,6 +74,8 @@ export function parsePlayerInputs(payload: string): PlayerInputs | null {
       steering: clampAxis(input.steering),
       turret: typeof input.turret === 'number' ? input.turret : undefined,
       fire: typeof input.fire === 'boolean' ? input.fire : undefined,
+      left: typeof input.left === 'boolean' ? input.left : undefined,
+      right: typeof input.right === 'boolean' ? input.right : undefined,
       seq: typeof input.seq === 'number' ? input.seq : undefined,
       ts: typeof input.ts === 'number' ? input.ts : undefined
     };
@@ -93,6 +97,8 @@ function parseNippleInputs(input: Record<string, unknown>): PlayerInputs | null 
     throttle: clampAxis(vector.y),
     steering: clampAxis(vector.x),
     fire: typeof input.fire === 'boolean' ? input.fire : undefined,
+    left: typeof input.left === 'boolean' ? input.left : undefined,
+    right: typeof input.right === 'boolean' ? input.right : undefined,
     seq: typeof input.seq === 'number' ? input.seq : undefined,
     ts: typeof input.ts === 'number' ? input.ts : undefined
   };

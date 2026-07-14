@@ -35,6 +35,8 @@ describe('parsePlayerInputs', () => {
           steering: -0.25,
           turret: 15,
           fire: true,
+          left: true,
+          right: false,
           seq: 42,
           ts: 1_800_000
         })
@@ -44,6 +46,8 @@ describe('parsePlayerInputs', () => {
         steering: -0.25,
         turret: 15,
         fire: true,
+        left: true,
+        right: false,
         seq: 42,
         ts: 1_800_000
       }
@@ -69,6 +73,8 @@ describe('parsePlayerInputs', () => {
         throttle: 0.8,
         steering: -0.4,
         fire: undefined,
+        left: undefined,
+        right: undefined,
         seq: undefined,
         ts: undefined
       }
@@ -92,6 +98,8 @@ describe('parsePlayerInputs', () => {
             }
           },
           fire: true,
+          left: false,
+          right: true,
           seq: 7,
           ts: 1_800_001
         })
@@ -100,6 +108,8 @@ describe('parsePlayerInputs', () => {
         throttle: -1,
         steering: 1,
         fire: true,
+        left: false,
+        right: true,
         seq: 7,
         ts: 1_800_001
       }

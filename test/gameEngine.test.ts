@@ -60,7 +60,13 @@ describe('GameEngine', () => {
     const engine = new GameEngine();
     const p1Tank = createOpenSocket();
     const p2Tank = createOpenSocket();
-    const payload = JSON.stringify({ throttle: 1, steering: -0.5, fire: true });
+    const payload = JSON.stringify({
+      throttle: 1,
+      steering: -0.5,
+      fire: true,
+      left: true,
+      right: false
+    });
 
     engine.attachTank('p1', p1Tank);
     engine.attachTank('p2', p2Tank);

@@ -120,9 +120,23 @@
         background: var(--blue);
       }
 
+      .action-key {
+        width: min(18vw, 112px);
+        min-height: 0;
+        aspect-ratio: 1;
+        border-radius: 50%;
+        justify-self: center;
+        touch-action: none;
+        user-select: none;
+      }
+
       .fire-key {
         background: var(--red);
         color: white;
+      }
+
+      .turn-key {
+        background: var(--yellow);
       }
 
       .setup {
@@ -196,8 +210,9 @@
 
       .actions {
         display: grid;
-        grid-template-columns: 1fr;
-        gap: 10px;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 14px;
+        justify-items: center;
       }
 
       #inGame > div {
@@ -205,7 +220,7 @@
       }
 
       .fire-key {
-        min-height: min(44dvh, 300px);
+        grid-column: 1 / -1;
       }
 
       button:disabled,
@@ -270,8 +285,8 @@
           margin: 0 auto;
         }
 
-        .fire-key {
-          min-height: min(64vh, 330px);
+        .action-key {
+          width: min(25vh, 120px);
         }
       }
     </style>
@@ -336,8 +351,14 @@
           </div>
 
           <div class="actions w-1/2">
-            <button id="fire" class="fire-key p-2">
+            <button id="fire" class="action-key fire-key p-2" type="button">
               Fire
+            </button>
+            <button id="left" class="action-key turn-key p-2" type="button" aria-label="Rotate left">
+              Left
+            </button>
+            <button id="right" class="action-key turn-key p-2" type="button" aria-label="Rotate right">
+              Right
             </button>
           </div>
         </div>
@@ -367,6 +388,8 @@
       const connectButton = document.querySelector("#connect");
       const readyButton = document.querySelector("#ready");
       const fireButton = document.querySelector("#fire");
+      const leftButton = document.querySelector("#left");
+      const rightButton = document.querySelector("#right");
       const matchStateText = document.querySelector("#matchState");
       const p1StateText = document.querySelector("#p1State");
       const p2StateText = document.querySelector("#p2State");
@@ -381,7 +404,7 @@
 
       let socket;
       let seq = 0;
-      let latest = { throttle: 0, steering: 0, fire: false };
+      let latest = { throttle: 0, steering: 0, fire: false, left: false, right: false };
       let sendTimer;
       let stateTimer;
       let gameState;
@@ -402,20 +425,9 @@
         sendJson({ type: "ready", ready: nextReady });
       });
 
-      fireButton.addEventListener("pointerdown", () => {
-        latest.fire = true;
-        sendInput();
-      });
-
-      fireButton.addEventListener("pointerup", () => {
-        latest.fire = false;
-        sendInput();
-      });
-
-      fireButton.addEventListener("pointercancel", () => {
-        latest.fire = false;
-        sendInput();
-      });
+      bindHeldButton(fireButton, "fire");
+      bindHeldButton(leftButton, "left");
+      bindHeldButton(rightButton, "right");
 
       function connect() {
         const url = new URL(serverUrl);
@@ -462,6 +474,8 @@
           throttle: latest.throttle,
           steering: latest.steering,
           fire: latest.fire,
+          left: latest.left,
+          right: latest.right,
           seq: ++seq,
           ts: Date.now(),
         });
@@ -567,6 +581,26 @@
         readyButton.disabled = !connected || !lobbyStatus;
         readyButton.textContent = ready ? "Unready" : "Ready";
         fireButton.disabled = !connected || gameState?.status !== "ACTIVE";
+        leftButton.disabled = fireButton.disabled;
+        rightButton.disabled = fireButton.disabled;
+      }
+
+      function bindHeldButton(button, control) {
+        button.addEventListener("pointerdown", (event) => {
+          button.setPointerCapture(event.pointerId);
+          latest[control] = true;
+          sendInput();
+        });
+
+        const release = () => {
+          if (latest[control]) {
+            latest[control] = false;
+            sendInput();
+          }
+        };
+        button.addEventListener("pointerup", release);
+        button.addEventListener("pointercancel", release);
+        button.addEventListener("lostpointercapture", release);
       }
 
       function bothReady() {
