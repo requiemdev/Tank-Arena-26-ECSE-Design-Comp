@@ -11,11 +11,13 @@ class Command {
         float throttle;
         float steering;
         bool fire;
+        bool left;
+        bool right;
         int seq;
         int timestamp;
 
     public:
-        Command(float throttle, float steering, bool fire, int seq, int timestamp);
+        Command(float throttle, float steering, bool fire, bool left, bool right, int seq, int timestamp);
 
         // Executes command, giving the appropriate function calls to control the MCU peripherals.
         void execute();

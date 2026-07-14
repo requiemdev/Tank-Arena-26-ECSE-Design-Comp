@@ -69,6 +69,10 @@ void configureWebSocket() {
 }
 
 void handleWebSocketEvent(WStype_t type, uint8_t *payload, size_t length) {
+  // Variable definiitions above which cannot go in switch case statements.
+  CommandReader reader = CommandReader(payload, length);
+  Command* command;
+
   switch (type) {
     case WStype_DISCONNECTED:
       Serial.println("[ws] disconnected");
@@ -87,8 +91,7 @@ void handleWebSocketEvent(WStype_t type, uint8_t *payload, size_t length) {
       Serial.println();
       
       // Read, execute and delete command instance formed.
-      CommandReader reader = CommandReader(payload, length);
-      Command* command = reader.interpretPayload();
+      command = reader.interpretPayload();
       if (command != nullptr) {
         command->execute();
         delete command;

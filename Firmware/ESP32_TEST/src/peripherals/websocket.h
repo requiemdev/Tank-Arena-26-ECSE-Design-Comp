@@ -14,5 +14,4 @@ void configureWebSocket();
 void handleWebSocketEvent(WStype_t type, uint8_t *payload, size_t length);
 void printPayload(uint8_t *payload, size_t length);
 
-
 #endif // !WEBSOCKET_H

@@ -1,9 +1,11 @@
 #include "command.h"
 
-Command::Command(float throttle, float steering, bool fire, int seq, int timestamp) {
+Command::Command(float throttle, float steering, bool fire, bool left, bool right, int seq, int timestamp) {
     this->throttle = throttle;
     this->steering = steering;
     this->fire = fire;
+    this->left = left;
+    this->right = right;
     this->seq = seq;
     this->timestamp = timestamp;
 }
@@ -13,6 +15,7 @@ Command::Command(float throttle, float steering, bool fire, int seq, int timesta
 void Command::execute() {
     setTankMotors(this->throttle, this->steering);
     setTankLed(this->fire);
+    setServoRotation(this->left, this->right);
 }
 
 CommandReader::CommandReader(uint8_t *payload, size_t length) {
@@ -31,6 +34,8 @@ Command* CommandReader::interpretPayload() {
     float throttle = 0;
     float steering = 0;
     bool fire = false;
+    bool left = false;
+    bool right = false;
     int seq = 0;
     int timestamp = 0;
     
@@ -50,6 +55,12 @@ Command* CommandReader::interpretPayload() {
         
         } else if (key->equals("fire")) {
             fire = readBool();
+
+        } else if (key->equals("left")) {
+            left = readBool();
+
+        } else if (key->equals("right")) {
+            right = readBool();
         
         } else if (key->equals("seq")) {
             seq = readInt();
@@ -64,8 +75,8 @@ Command* CommandReader::interpretPayload() {
         fields_set += 1;
     }
 
-    if (fields_set == 5 && read_success) {
-        return new Command(throttle, steering, fire, seq, timestamp);
+    if (fields_set == 7 && read_success) {
+        return new Command(throttle, steering, fire, left, right, seq, timestamp);
     } else {
         return nullptr;
     }
