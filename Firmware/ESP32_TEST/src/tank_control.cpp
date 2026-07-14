@@ -16,7 +16,7 @@ void setServoRotation(uint8_t acw_rotation, uint8_t cw_rotation) {
 
 void setTankLed(uint8_t value) {
     if (value) {
-        pwmWrite(PWM_Channel::LED, 2048);
+        pwmWrite(PWM_Channel::LED, 128);
     } else {
         pwmWrite(PWM_Channel::LED, 0);
     }

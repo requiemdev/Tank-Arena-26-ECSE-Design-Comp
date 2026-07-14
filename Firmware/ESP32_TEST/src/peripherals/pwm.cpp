@@ -9,8 +9,7 @@ void pwmSetup() {
     ledcSetup(PWM_Channel::MOTOR_PWMA, 1000, 12);
     ledcSetup(PWM_Channel::MOTOR_PWMB, 1000, 12);
     ledcSetup(PWM_Channel::SPEAKER, 500, 12);
-    ledcSetup(PWM_Channel::LED, 38000, 12);
-
+    ledcSetup(PWM_Channel::LED, 38000, 8);
 
     ledcAttachPin(PIN_SERVO, PWM_Channel::SERVO);
     ledcAttachPin(PIN_PWMA, PWM_Channel::MOTOR_PWMA);

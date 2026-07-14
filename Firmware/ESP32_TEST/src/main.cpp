@@ -30,14 +30,10 @@ void setup() {
   // Initialise timers.
   initialiseTimers();
 
+#ifndef USE_TEST_CODE
   // Initialise websockets
   websocket_init();
-
-#ifdef USE_TEST_CODE
-  // Set motors to backwards and right (change in testing).
-  setTankMotors(-1, 1);
-  
-#endif // USE_TEST_CODE
+#endif // !USE_TEST_CODE
 }
 
 // Runs repeatedly after setup() is called.
@@ -68,17 +64,14 @@ void loop() {
   setTankMotors(0, 0);
 
   delay(5000);
-  int digital_read_value = digitalRead(PIN_VCOMP1);
-  // Serial.printf("Digital Read Value = %d\n", digital_read_value);
-  digitalWrite(PIN_LED, digital_read_value); // HIGH or LOW.
 
   setTankLed(HIGH);
-  setServoRotation(1); // Full forward rotation.
+  setServoRotation(1, 0); // Full forward rotation.
   
   delay(500); // Milliseconds.
 
   setTankLed(LOW);
-  setServoRotation(-1); // Full backward rotation.
+  setServoRotation(0, 1); // Full backward rotation.
 
   delay(500); // ms
 
