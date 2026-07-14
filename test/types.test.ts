@@ -121,6 +121,10 @@ describe('parsePlayerInputs', () => {
     assert.equal(parsePlayerInputs('null'), null);
     assert.equal(parsePlayerInputs(JSON.stringify({ throttle: 1 })), null);
     assert.equal(parsePlayerInputs(JSON.stringify({ throttle: '1', steering: 0 })), null);
+    assert.equal(
+      parsePlayerInputs(JSON.stringify({ throttle: 0, steering: 0, left: true, right: true })),
+      null
+    );
   });
 });
 

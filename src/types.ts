@@ -65,6 +65,10 @@ export function parsePlayerInputs(payload: string): PlayerInputs | null {
     }
 
     const input = data as Record<string, unknown>;
+    if (input.left === true && input.right === true) {
+      return null;
+    }
+
     if (typeof input.throttle !== 'number' || typeof input.steering !== 'number') {
       return parseNippleInputs(input);
     }

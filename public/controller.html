@@ -410,6 +410,7 @@
       let gameState;
       let joystick;
       let fallbackJoystickReady = false;
+      const heldTurns = [];
 
       connectButton.addEventListener("click", () => {
         if (socket?.readyState === WebSocket.OPEN) {
@@ -426,8 +427,8 @@
       });
 
       bindHeldButton(fireButton, "fire");
-      bindHeldButton(leftButton, "left");
-      bindHeldButton(rightButton, "right");
+      bindTurnButton(leftButton, "left");
+      bindTurnButton(rightButton, "right");
 
       function connect() {
         const url = new URL(serverUrl);
@@ -583,6 +584,12 @@
         fireButton.disabled = !connected || gameState?.status !== "ACTIVE";
         leftButton.disabled = fireButton.disabled;
         rightButton.disabled = fireButton.disabled;
+        if (fireButton.disabled) {
+          heldTurns.length = 0;
+          latest.fire = false;
+          latest.left = false;
+          latest.right = false;
+        }
       }
 
       function bindHeldButton(button, control) {
@@ -601,6 +608,36 @@
         button.addEventListener("pointerup", release);
         button.addEventListener("pointercancel", release);
         button.addEventListener("lostpointercapture", release);
+      }
+
+      function bindTurnButton(button, direction) {
+        button.addEventListener("pointerdown", (event) => {
+          button.setPointerCapture(event.pointerId);
+          const previousIndex = heldTurns.indexOf(direction);
+          if (previousIndex !== -1) {
+            heldTurns.splice(previousIndex, 1);
+          }
+          heldTurns.push(direction);
+          syncHeldTurn();
+        });
+
+        const release = () => {
+          const index = heldTurns.indexOf(direction);
+          if (index !== -1) {
+            heldTurns.splice(index, 1);
+            syncHeldTurn();
+          }
+        };
+        button.addEventListener("pointerup", release);
+        button.addEventListener("pointercancel", release);
+        button.addEventListener("lostpointercapture", release);
+      }
+
+      function syncHeldTurn() {
+        const activeTurn = heldTurns[heldTurns.length - 1];
+        latest.left = activeTurn === "left";
+        latest.right = activeTurn === "right";
+        sendInput();
       }
 
       function bothReady() {
