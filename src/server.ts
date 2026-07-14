@@ -291,6 +291,12 @@ export async function startServer(): Promise<void> {
   }
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+import { pathToFileURL } from 'node:url';
+
+if(import.meta.url === pathToFileURL(process.argv[1]).href){
   await startServer();
 }
+
+// if (import.meta.url === `file://${process.argv[1]}`) {
+//   await startServer();
+// }
