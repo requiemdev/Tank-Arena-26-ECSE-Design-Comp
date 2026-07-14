@@ -5,6 +5,8 @@
 #include <WiFi.h>
 #include <WebSocketsClient.h>
 
+#include "command.h"
+
 void websocket_loop();
 void websocket_init();
 void connectWiFi();

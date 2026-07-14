@@ -85,6 +85,10 @@ void handleWebSocketEvent(WStype_t type, uint8_t *payload, size_t length) {
       Serial.print(" bytes: ");
       printPayload(payload, length);
       Serial.println();
+      Command* command = interpretPayload(payload, length);
+      if (command != nullptr) {
+        
+      }
       break;
 
     case WStype_BIN:
