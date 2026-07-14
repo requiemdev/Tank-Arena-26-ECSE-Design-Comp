@@ -7,9 +7,10 @@
 
 enum PWM_Channel {
     SERVO = 0,
-    MOTOR_PWMA = 1,
-    MOTOR_PWMB = 2,
-    SPEAKER = 3
+    MOTOR_PWMA = 2,
+    MOTOR_PWMB = 3,
+    SPEAKER = 4,
+    LED = 6
 };
 
 // Set up pwm pins for use in PWM output. 

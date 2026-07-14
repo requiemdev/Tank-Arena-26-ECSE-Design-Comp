@@ -12,8 +12,14 @@ void setServoRotation(uint8_t acw_rotation, uint8_t cw_rotation) {
     pwmWrite(PWM_Channel::SERVO, duty);
 }
 
+// Set duty cycle to 50% if on.
+
 void setTankLed(uint8_t value) {
-    digitalWrite(PIN_LED, value);
+    if (value) {
+        pwmWrite(PWM_Channel::LED, 2048);
+    } else {
+        pwmWrite(PWM_Channel::LED, 0);
+    }
 }
 
 // CW: IN1 = HIGH, IN2 = LOW
