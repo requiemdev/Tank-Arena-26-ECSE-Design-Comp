@@ -85,9 +85,13 @@ void handleWebSocketEvent(WStype_t type, uint8_t *payload, size_t length) {
       Serial.print(" bytes: ");
       printPayload(payload, length);
       Serial.println();
-      Command* command = interpretPayload(payload, length);
+      
+      // Read, execute and delete command instance formed.
+      CommandReader reader = CommandReader(payload, length);
+      Command* command = reader.interpretPayload();
       if (command != nullptr) {
-        
+        command->execute();
+        delete command;
       }
       break;
 

@@ -84,5 +84,7 @@ void loop() {
 
 #endif // USE_TEST_CODE
 
+#ifndef USE_TEST_CODE
   websocket_loop();
+#endif //!USE_TEST_CODE
 }

@@ -5,6 +5,7 @@
 
 #include "tank_control.h"
 
+// Represents a command sent from the servo which should be executed by the tank.
 class Command {
     private:
         float throttle;
@@ -13,12 +14,34 @@ class Command {
         int seq;
         int timestamp;
 
+    public:
         Command(float throttle, float steering, bool fire, int seq, int timestamp);
 
-    public:
+        // Executes command, giving the appropriate function calls to control the MCU peripherals.
         void execute();
 };
 
-Command* interpretPayload(uint8_t *payload, size_t length);
+class CommandReader {
+    private:
+        uint8_t *payload;
+        size_t length;
+        int index;
+        bool read_success;
+
+        bool readBool();
+        float readFloat();
+        int readInt();
+        String* readString();
+        
+        // Reads a JSON key in the payload and returns the key as a string
+        String* readKey();
+
+    public:
+        CommandReader(uint8_t *payload, size_t length);
+
+        // Reads the payload string which is in JSON form, outputting the resulting command.
+        // Returns nullptr if the payload is invalid.
+        Command* interpretPayload();
+};
 
 #endif // COMMAND_H
