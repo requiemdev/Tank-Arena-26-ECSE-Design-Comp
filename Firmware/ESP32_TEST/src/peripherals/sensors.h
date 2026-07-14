@@ -3,6 +3,7 @@
 
 #include <Arduino.h>
 #include "tank_pins.h"
+#include "tank_timers.h"
 
 enum SensorDirection {
     FRONT,

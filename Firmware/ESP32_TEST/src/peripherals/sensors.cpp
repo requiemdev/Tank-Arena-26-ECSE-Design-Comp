@@ -1,6 +1,6 @@
 #include "sensors.h"
 
-std::function<void(SensorDirection)> detect_hit_function;
+//volatile std::function<void(SensorDirection)> detect_hit_function;
 
 const unsigned long DEBOUNCE_TIME_MS = 500;
 volatile unsigned long button_timer = 0;
@@ -12,6 +12,7 @@ void onSensorHit(SensorDirection sensor_direction) {
         button_pressed = true;
         button_timer = current_time;
         Serial.printf("Sensor %d detected!\n", sensor_direction);
+        startTimer(TimerNumber::SPEAKER_TIMER);
     }
 }
 
