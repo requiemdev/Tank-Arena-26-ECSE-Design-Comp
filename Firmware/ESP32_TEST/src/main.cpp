@@ -46,24 +46,25 @@ void loop() {
   setServoRotation(1, 0); // ACW rotation.
 
   // Set motors to forwards and left (change in testing).
-  setTankMotors(0.8, -0.2);
+  setTankMotors(1, -0.2);
   
-  delay(5000); // Milliseconds.
+  delay(3000); // Milliseconds.
 
   setTankLed(LOW);
   setServoRotation(0, 1); // CW rotation.
 
   // Set motors to backwards and right (change in testing).
-  setTankMotors(-0.5, 0.8);
+  // NOTE: works at product = 0.18
+  setTankMotors(-0.45, 0.6);
 
-  delay(5000); // ms
+  delay(3000); // ms
 
   // Set to no rotation and moving. 
 
   setServoRotation(0, 0);
   setTankMotors(0, 0);
 
-  delay(5000);
+  delay(3000);
 
   setTankLed(HIGH);
   setServoRotation(1, 0); // Full forward rotation.

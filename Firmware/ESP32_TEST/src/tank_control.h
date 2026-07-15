@@ -19,10 +19,10 @@ enum MotorDirection {
 };
 
 // Change based on how motors are connected.
-#define SET_LEFT_MOTOR_FORWARD setTankMotorDirection(TankMotor::MOTOR_A, MotorDirection::ACW_DIRECTION)
-#define SET_LEFT_MOTOR_BACKWARD setTankMotorDirection(TankMotor::MOTOR_A, MotorDirection::CW_DIRECTION)
-#define SET_RIGHT_MOTOR_FORWARD setTankMotorDirection(TankMotor::MOTOR_B, MotorDirection::CW_DIRECTION)
-#define SET_RIGHT_MOTOR_BACKWARD setTankMotorDirection(TankMotor::MOTOR_B, MotorDirection::ACW_DIRECTION)
+#define SET_LEFT_MOTOR_FORWARD setTankMotorDirection(TankMotor::MOTOR_A, MotorDirection::CW_DIRECTION)
+#define SET_LEFT_MOTOR_BACKWARD setTankMotorDirection(TankMotor::MOTOR_A, MotorDirection::ACW_DIRECTION)
+#define SET_RIGHT_MOTOR_FORWARD setTankMotorDirection(TankMotor::MOTOR_B, MotorDirection::ACW_DIRECTION)
+#define SET_RIGHT_MOTOR_BACKWARD setTankMotorDirection(TankMotor::MOTOR_B, MotorDirection::CW_DIRECTION)
 
 // Motor constants for controlling movement of tank.
 // Top two are between 0 and 1, bottom is between 0 and 100. (although ranges can be changed if more suitable for config).
