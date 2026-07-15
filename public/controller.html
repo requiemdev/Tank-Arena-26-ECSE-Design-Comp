@@ -21,6 +21,8 @@
         --yellow: #efc733;
         --red: #d92532;
         --line: #10141b;
+        --stick-size: clamp(120px, min(42vw, 48dvh), 340px);
+        --button-size: clamp(70px, min(18vw, 22dvh), 112px);
       }
 
       * {
@@ -121,7 +123,7 @@
       }
 
       .action-key {
-        width: min(18vw, 112px);
+        width: var(--button-size);
         min-height: 0;
         aspect-ratio: 1;
         border-radius: 50%;
@@ -176,7 +178,7 @@
       }
 
       #joystick {
-        width: min(56vw, 340px);
+        width: var(--stick-size);
         aspect-ratio: 1;
         position: relative;
         border-radius: 50%;
@@ -186,7 +188,7 @@
       .pad {
         display: grid;
         place-items: center;
-        min-height: 100%;
+        min-height: var(--stick-size);
         position: relative;
         touch-action: none;
         user-select: none;
@@ -241,6 +243,11 @@
       }
 
       @media (orientation: landscape) and (max-height: 520px) {
+        :root {
+          --stick-size: clamp(108px, min(34vw, 58dvh), 260px);
+          --button-size: clamp(62px, min(13vw, 24dvh), 104px);
+        }
+
         .controller-shell {
           min-height: 100dvh;
           padding: 12px 18px;
@@ -261,7 +268,7 @@
 
         #inGame {
           display: grid;
-          grid-template-columns: minmax(250px, 1fr) minmax(260px, 1fr);
+          grid-template-columns: minmax(var(--stick-size), 1fr) minmax(calc(var(--button-size) * 2 + 14px), 1fr);
           gap: 14px;
           align-items: center;
         }
@@ -275,18 +282,14 @@
           display: contents;
         }
 
-        #inGame .pad,
+        #inGame .pad {
+          min-height: var(--stick-size);
+          width: 100%;
+        }
+
         #inGame .actions {
-          width: auto;
-        }
-
-        #joystick {
-          width: min(74vh, 360px);
-          margin: 0 auto;
-        }
-
-        .action-key {
-          width: min(25vh, 120px);
+          align-content: center;
+          width: 100%;
         }
       }
     </style>
@@ -429,6 +432,7 @@
       bindHeldButton(fireButton, "fire");
       bindTurnButton(leftButton, "left");
       bindTurnButton(rightButton, "right");
+      window.addEventListener("resize", resetJoystick);
 
       function connect() {
         const url = new URL(serverUrl);
@@ -663,7 +667,7 @@
         }
 
         const rect = joystickZone.getBoundingClientRect();
-        if (!rect.width) {
+        if (!rect.width || !rect.height) {
           return;
         }
 
@@ -672,7 +676,7 @@
           return;
         }
 
-        const size = Math.min(190, rect.width, rect.height);
+        const size = Math.min(rect.width, rect.height) * 0.72;
         joystick = nipplejs.create({
           zone: joystickZone,
           mode: "static",
@@ -689,6 +693,16 @@
         });
 
         joystick.on("end", stopMoving);
+      }
+
+      function resetJoystick() {
+        if (!joystick) {
+          return;
+        }
+
+        joystick.destroy();
+        joystick = null;
+        window.requestAnimationFrame(setupJoystick);
       }
 
       function setupFallbackJoystick() {
