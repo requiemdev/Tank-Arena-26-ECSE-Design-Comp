@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<title>Tank Leaderboard</title>
+
+<style>
+
+body {
+    background:#202020;
+    color:white;
+    font-family:Arial, sans-serif;
+    padding:40px;
+}
+
+
+h1 {
+    text-align:center;
+    margin-bottom:30px;
+}
+
+
+table {
+    border-collapse:collapse;
+    width:100%;
+    background:#282828;
+}
+
+
+th {
+    background:#333;
+    padding:12px;
+}
+
+
+td {
+    padding:12px;
+    border-bottom:1px solid #555;
+    text-align:center;
+}
+
+
+tr:hover {
+    background:#3a3a3a;
+}
+
+
+.rank {
+    font-weight:bold;
+}
+
+
+#winner {
+    color:#00ff88;
+}
+
+
+.error {
+    text-align:center;
+    color:red;
+}
+
+</style>
+
+</head>
+
+
+<body>
+
+
+<h1>🏆 Tank Leaderboard</h1>
+
+
+<table>
+
+<thead>
+
+<tr>
+
+<th>#</th>
+<th>Player 1</th>
+<th>Player 2</th>
+<th>Winner</th>
+<th>Score</th>
+<th>Date</th>
+
+</tr>
+
+</thead>
+
+
+<tbody id="leaderboard">
+
+</tbody>
+
+
+</table>
+
+
+
+<script>
+
+
+async function loadLeaderboard(){
+
+    const tbody = document.getElementById("leaderboard");
+
+
+    try {
+
+        const response = await fetch("/api/leaderboard");
+
+
+        if(!response.ok){
+            throw new Error(
+                `Server returned ${response.status}`
+            );
+        }
+
+
+        const matches = await response.json();
+
+
+        tbody.innerHTML = "";
+
+
+        if(matches.length === 0){
+
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="6">
+                        No matches played yet
+                    </td>
+                </tr>
+            `;
+
+            return;
+        }
+
+
+
+        matches.forEach((match,index)=>{
+
+
+            const row = document.createElement("tr");
+
+
+            row.innerHTML = `
+
+                <td class="rank">
+                    ${index + 1}
+                </td>
+
+
+                <td>
+                    ${match.player1_name}
+                </td>
+
+
+                <td>
+                    ${match.player2_name}
+                </td>
+
+
+                <td id="winner">
+                    ${match.winner_name}
+                </td>
+
+
+                <td>
+                    ${match.player1_score}
+                    -
+                    ${match.player2_score}
+                </td>
+
+
+                <td>
+                    ${new Date(match.created_at)
+                    .toLocaleString()}
+                </td>
+
+            `;
+
+
+            tbody.appendChild(row);
+
+
+        });
+
+
+    }
+
+
+    catch(error){
+
+        console.error(
+            "Failed to load leaderboard:",
+            error
+        );
+
+
+        tbody.innerHTML = `
+
+            <tr>
+
+                <td colspan="6" class="error">
+
+                    Failed to load leaderboard
+
+                </td>
+
+            </tr>
+
+        `;
+
+    }
+
+}
+
+
+
+loadLeaderboard();
+
+
+// refresh every 5 seconds
+setInterval(loadLeaderboard,5000);
+
+
+</script>
+
+
+</body>
+
+</html>

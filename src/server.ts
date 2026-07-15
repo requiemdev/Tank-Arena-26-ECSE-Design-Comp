@@ -7,6 +7,7 @@ import { isClientType, isPlayerSlot, type PlayerSlot } from './types.js';
 const PORT = Number(process.env.PORT ?? 8080);
 const HOST = '0.0.0.0';
 const CONTROLLER_HTML_URL = new URL('../public/controller.html', import.meta.url);
+const LEADERBOARD_HTML_URL = new URL('../public/leaderboard.html', import.meta.url);
 
 export interface EdgeServerOptions {
   gameEngine?: GameEngine;
@@ -36,6 +37,42 @@ export function buildServer(options: EdgeServerOptions = {}) {
   });
 
   app.get('/state', async () => gameEngine.getPublicState());
+
+  app.get('/leaderboard', async (_request, reply) => {
+    const html = await readFile(LEADERBOARD_HTML_URL, 'utf8');
+
+    return reply
+        .type('text/html; charset=utf-8')
+        .send(html);
+});
+
+  app.get('/api/leaderboard', async () => {
+
+    const { createClient } = await import('@supabase/supabase-js');
+
+    const supabase = createClient(
+        process.env.SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+
+
+    const { data, error } = await supabase
+        .from('leaderboard')
+        .select('*')
+        .order('created_at', {
+            ascending:false
+        })
+        .limit(50);
+
+
+    if(error){
+        throw error;
+    }
+
+
+    return data;
+
+});
 
   app.post('/start', async (_request, reply) => {
     const started = gameEngine.startCountdown();
