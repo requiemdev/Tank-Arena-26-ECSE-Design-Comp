@@ -23,6 +23,8 @@
         --line: #10141b;
         --stick-size: clamp(120px, min(42vw, 48dvh), 340px);
         --button-size: clamp(70px, min(18vw, 22dvh), 112px);
+        --pregame-gap: clamp(6px, 1.5vw, 14px);
+        --pregame-control-height: clamp(38px, 7vw, 56px);
       }
 
       * {
@@ -231,6 +233,25 @@
         opacity: 0.55;
       }
 
+      #preGame {
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr));
+        gap: var(--pregame-gap);
+        align-items: end;
+        font-size: clamp(0.68rem, 1.6vw, 0.78rem);
+      }
+
+      #preGame input,
+      #preGame select,
+      #preGame button {
+        min-height: var(--pregame-control-height);
+        padding: clamp(7px, 1.8vw, 12px) clamp(10px, 2.4vw, 18px);
+      }
+
+      #preGame > div {
+        grid-column: 1 / -1;
+        gap: var(--pregame-gap);
+      }
+
       @media (min-width: 780px) {
         .controller-shell {
           padding: 24px;
@@ -240,6 +261,13 @@
           grid-template-columns: 2fr 1fr 1fr;
         }
 
+        #preGame {
+          grid-template-columns: minmax(10rem, 1fr) minmax(14rem, 1.4fr) minmax(16rem, 1fr);
+        }
+
+        #preGame > div {
+          grid-column: auto;
+        }
       }
 
       @media (orientation: landscape) and (max-height: 520px) {
@@ -258,7 +286,7 @@
         }
 
         #preGame {
-          grid-template-columns: minmax(170px, 1fr) minmax(220px, 1.25fr) 1fr;
+          grid-template-columns: minmax(8rem, 1fr) minmax(10rem, 1.25fr) minmax(11rem, 1fr);
           align-items: end;
         }
 
