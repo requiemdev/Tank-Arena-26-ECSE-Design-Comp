@@ -5,6 +5,8 @@
 
 #include "tank_control.h"
 
+//#define PRINT_COMMAND_INTERPRET_INFORMATION
+
 // Represents a command sent from the servo which should be executed by the tank.
 class Command {
     private:

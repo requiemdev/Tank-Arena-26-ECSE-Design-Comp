@@ -49,27 +49,59 @@ Command* CommandReader::interpretPayload() {
 
         if (key->equals("throttle")) {
             throttle = readFloat();
+            
+            #ifdef PRINT_COMMAND_INTERPRET_INFORMATION
+            Serial.printf("throttle: %f\n", throttle);
+            #endif // PRINT_COMMAND_INTERPRET_INFORMATION
         
         } else if (key->equals("steering")) {
             steering = readFloat();
+            
+            #ifdef PRINT_COMMAND_INTERPRET_INFORMATION
+            Serial.printf("steering: %f\n", steering);
+            #endif // PRINT_COMMAND_INTERPRET_INFORMATION
         
         } else if (key->equals("fire")) {
             fire = readBool();
 
+            #ifdef PRINT_COMMAND_INTERPRET_INFORMATION
+            Serial.printf("fire: %d\n", fire);
+            #endif // PRINT_COMMAND_INTERPRET_INFORMATION
+
         } else if (key->equals("left")) {
             left = readBool();
 
+            #ifdef PRINT_COMMAND_INTERPRET_INFORMATION
+            Serial.printf("left: %d\n", left);
+            #endif // PRINT_COMMAND_INTERPRET_INFORMATION
+
         } else if (key->equals("right")) {
             right = readBool();
+
+            #ifdef PRINT_COMMAND_INTERPRET_INFORMATION
+            Serial.printf("right: %d\n", right);
+            #endif // PRINT_COMMAND_INTERPRET_INFORMATION
         
         } else if (key->equals("seq")) {
             seq = readInt();
+
+            #ifdef PRINT_COMMAND_INTERPRET_INFORMATION
+            Serial.printf("seq: %d\n", seq);
+            #endif // PRINT_COMMAND_INTERPRET_INFORMATION
         
         } else if (key->equals("ts")) {
             timestamp = readInt();
+
+            #ifdef PRINT_COMMAND_INTERPRET_INFORMATION
+            Serial.printf("ts: %d\n", timestamp);
+            #endif // PRINT_COMMAND_INTERPRET_INFORMATION
         
         } else {
             // Invalid field!
+            #ifdef PRINT_COMMAND_INTERPRET_INFORMATION
+            Serial.printf("Invalid field: %s, exiting!\n", key->c_str());
+            #endif // PRINT_COMMAND_INTERPRET_INFORMATION
+            
             return nullptr;
         }
         fields_set += 1;
@@ -78,6 +110,11 @@ Command* CommandReader::interpretPayload() {
     if (fields_set == 7 && read_success) {
         return new Command(throttle, steering, fire, left, right, seq, timestamp);
     } else {
+        // Not enough fields
+        #ifdef PRINT_COMMAND_INTERPRET_INFORMATION
+        Serial.printf("Not enough fields set: %d, exiting!\n", fields_set);
+        #endif // PRINT_COMMAND_INTERPRET_INFORMATION
+        
         return nullptr;
     }
 }
@@ -163,7 +200,7 @@ String* CommandReader::readString() {
     
     String* str = new String();
     while (index < length && payload[index] != '"') {
-        *str += payload[index];
+        *str += (char)payload[index];
         index += 1;
     }
     if (index >= length) { // String not closed.
