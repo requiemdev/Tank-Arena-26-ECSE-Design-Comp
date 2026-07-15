@@ -28,7 +28,9 @@ enum MotorDirection {
 // Top two are between 0 and 1, bottom is between 0 and 100. (although ranges can be changed if more suitable for config).
 #define MOVEMENT_FACTOR 1
 #define STEERING_FACTOR 1
-#define TURRET_ROTATION_FACTOR 100
+
+// Working range: 40 - 100
+#define TURRET_ROTATION_FACTOR 40
 
 // Set rotation of servo. At most one condition will be true at the same time.
 void setServoRotation(uint8_t acw_rotation, uint8_t cw_rotation);

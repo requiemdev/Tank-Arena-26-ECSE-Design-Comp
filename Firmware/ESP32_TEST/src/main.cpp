@@ -7,7 +7,7 @@
 #include "peripherals/websocket.h"
 #include "tank_control.h"
 
-//#define USE_TEST_CODE // Enable/disable code used for testing peripherals
+#define USE_TEST_CODE // Enable/disable code used for testing peripherals
 
 #define SERIAL_BAUD_RATE 115200
 
@@ -50,7 +50,7 @@ void loop() {
   
   delay(3000); // Milliseconds.
 
-  setTankLed(LOW);
+  //setTankLed(LOW);
   setServoRotation(0, 1); // CW rotation.
 
   // Set motors to backwards and right (change in testing).
@@ -66,12 +66,12 @@ void loop() {
 
   delay(3000);
 
-  setTankLed(HIGH);
+  //setTankLed(HIGH);
   setServoRotation(1, 0); // Full forward rotation.
   
   delay(500); // Milliseconds.
 
-  setTankLed(LOW);
+  //setTankLed(LOW);
   setServoRotation(0, 1); // Full backward rotation.
 
   delay(500); // ms
