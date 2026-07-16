@@ -89,18 +89,6 @@ export function buildServer(options: EdgeServerOptions = {}) {
     };
   });
 
-  app.post<{ Params: { player: string } }>('/hit/:player', async (request, reply) => {
-    const { player } = request.params;
-    if (!isPlayerSlot(player)) {
-      return reply.code(400).send({ error: 'player must be p1 or p2' });
-    }
-
-    gameEngine.registerHit(player);
-    return reply.code(202).send({
-      state: gameEngine.getPublicState()
-    });
-  });
-
   wss.on('connection', (socket, request) => {
     const url = new URL(request.url ?? '/connect', `http://${request.headers.host ?? 'localhost'}`);
     const type = url.searchParams.get('type');

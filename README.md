@@ -70,3 +70,13 @@ The hardware endpoint receives JSON like:
   "ts": 1800000000000
 }
 ```
+
+When the robot detects that its own tank was hit, send the event through the same tank WebSocket connection:
+
+```json
+{
+  "type": "hit"
+}
+```
+
+The server uses the connected tank's player slot to reduce that tank's health and update the opposing player's score.

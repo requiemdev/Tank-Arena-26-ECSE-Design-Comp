@@ -1,5 +1,7 @@
 import assert from 'node:assert/strict';
+import type { AddressInfo } from 'node:net';
 import { describe, it } from 'node:test';
+import { WebSocket } from 'ws';
 import { GameEngine } from '../src/gameEngine.js';
 import { buildServer } from '../src/server.js';
 
@@ -89,30 +91,30 @@ describe('HTTP implementation', () => {
     assert.equal(response.json().state.status, 'LOBBY');
   });
 
-  it('applies hit requests to valid players and rejects invalid player params', async (t) => {
+  it('applies tank hit messages over the established websocket', async (t) => {
     const engine = new GameEngine();
     const app = buildServer({ gameEngine: engine, logger: false });
+    await app.listen({ host: '127.0.0.1', port: 0 });
+    engine.getState().status = 'ACTIVE';
+    const address = app.server.address() as AddressInfo;
+    const tankSocket = new WebSocket(`ws://127.0.0.1:${address.port}/connect?type=tank&player=p2`);
     t.after(async () => {
+      engine.getState().status = 'LOBBY';
+      await closeSocket(tankSocket);
       await app.close();
     });
-    engine.getState().status = 'ACTIVE';
 
-    const hitResponse = await app.inject({
+    await waitForOpen(tankSocket);
+    tankSocket.send(JSON.stringify({ type: 'hit' }));
+    await waitUntil(() => engine.getPublicState().players.p2.health === 90);
+    const removedEndpointResponse = await app.inject({
       method: 'POST',
       url: '/hit/p2'
     });
-    const invalidResponse = await app.inject({
-      method: 'POST',
-      url: '/hit/p3'
-    });
 
-    assert.equal(hitResponse.statusCode, 202);
-    assert.equal(hitResponse.json().state.players.p2.health, 90);
-    assert.equal(hitResponse.json().state.players.p1.score, 10);
-    assert.equal(invalidResponse.statusCode, 400);
-    assert.deepEqual(invalidResponse.json(), {
-      error: 'player must be p1 or p2'
-    });
+    assert.equal(engine.getPublicState().players.p2.health, 90);
+    assert.equal(engine.getPublicState().players.p1.score, 10);
+    assert.equal(removedEndpointResponse.statusCode, 404);
   });
 
   it('resets the game through the public route', async (t) => {
@@ -137,3 +139,39 @@ describe('HTTP implementation', () => {
     assert.equal(response.json().state.players.p2.health, 100);
   });
 });
+
+function waitForOpen(socket: WebSocket): Promise<void> {
+  if (socket.readyState === WebSocket.OPEN) {
+    return Promise.resolve();
+  }
+
+  return new Promise((resolve, reject) => {
+    socket.once('open', resolve);
+    socket.once('error', reject);
+  });
+}
+
+async function waitUntil(predicate: () => boolean, timeoutMs = 500): Promise<void> {
+  const startedAt = Date.now();
+
+  while (!predicate()) {
+    if (Date.now() - startedAt > timeoutMs) {
+      throw new Error('Timed out waiting for condition');
+    }
+
+    await new Promise((resolve) => {
+      setTimeout(resolve, 10);
+    });
+  }
+}
+
+function closeSocket(socket: WebSocket): Promise<void> {
+  if (socket.readyState === WebSocket.CLOSED) {
+    return Promise.resolve();
+  }
+
+  return new Promise((resolve) => {
+    socket.once('close', resolve);
+    socket.close();
+  });
+}
