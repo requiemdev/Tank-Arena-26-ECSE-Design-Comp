@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import type { AddressInfo } from 'node:net';
 import { describe, it } from 'node:test';
-import { WebSocket } from 'ws';
+import { WebSocket, type RawData } from 'ws';
 import { GameEngine } from '../src/gameEngine.js';
 import { buildServer } from '../src/server.js';
 
@@ -117,6 +117,32 @@ describe('HTTP implementation', () => {
     assert.equal(removedEndpointResponse.statusCode, 404);
   });
 
+  it('notifies the other controller when a player disconnects during a match', async (t) => {
+    const engine = new GameEngine();
+    const app = buildServer({ gameEngine: engine, logger: false });
+    await app.listen({ host: '127.0.0.1', port: 0 });
+    const address = app.server.address() as AddressInfo;
+    const p1Socket = new WebSocket(`ws://127.0.0.1:${address.port}/connect?type=controller&player=p1`);
+    const p2Socket = new WebSocket(`ws://127.0.0.1:${address.port}/connect?type=controller&player=p2`);
+    t.after(async () => {
+      await closeSocket(p1Socket);
+      await closeSocket(p2Socket);
+      await app.close();
+    });
+
+    await Promise.all([waitForOpen(p1Socket), waitForOpen(p2Socket)]);
+    p1Socket.send(JSON.stringify({ type: 'ready', ready: true }));
+    p2Socket.send(JSON.stringify({ type: 'ready', ready: true }));
+    await waitUntil(() => engine.getPublicState().status === 'COUNTDOWN');
+
+    p1Socket.close();
+    const state = await waitForStateStatus(p2Socket, 'ENDED');
+
+    assert.equal(state.status, 'ENDED');
+    assert.equal(state.players.p1.controllerConnected, false);
+    assert.equal(state.players.p2.controllerConnected, true);
+  });
+
   it('resets the game through the public route', async (t) => {
     const engine = new GameEngine();
     const app = buildServer({ gameEngine: engine, logger: false });
@@ -173,5 +199,25 @@ function closeSocket(socket: WebSocket): Promise<void> {
   return new Promise((resolve) => {
     socket.once('close', resolve);
     socket.close();
+  });
+}
+
+function waitForStateStatus(socket: WebSocket, status: string): Promise<Record<string, any>> {
+  return new Promise((resolve, reject) => {
+    const timeout = setTimeout(() => {
+      socket.off('message', handleMessage);
+      reject(new Error(`Timed out waiting for ${status} state`));
+    }, 500);
+
+    const handleMessage = (data: RawData) => {
+      const message = JSON.parse(data.toString());
+      if (message?.type === 'state' && message.state?.status === status) {
+        clearTimeout(timeout);
+        socket.off('message', handleMessage);
+        resolve(message.state);
+      }
+    };
+
+    socket.on('message', handleMessage);
   });
 }

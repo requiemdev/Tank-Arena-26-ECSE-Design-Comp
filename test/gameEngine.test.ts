@@ -202,6 +202,33 @@ describe('GameEngine', () => {
     engine.resetEngine();
   });
 
+  it('ends countdown without queuing a result when a controller disconnects', () => {
+    const results: MatchResult[] = [];
+    const engine = new GameEngine((result) => {
+      results.push(result);
+    });
+    const p1Controller = createOpenSocket();
+    const p2Controller = createOpenSocket();
+
+    engine.attachController('p1', p1Controller);
+    engine.attachController('p2', p2Controller);
+    engine.setPlayerReady('p1', true);
+    engine.setPlayerReady('p2', true);
+
+    assert.equal(engine.getPublicState().status, 'COUNTDOWN');
+
+    engine.disconnectController('p1', p1Controller);
+
+    const publicState = engine.getPublicState();
+    assert.equal(publicState.status, 'ENDED');
+    assert.equal(publicState.winner, null);
+    assert.equal(publicState.players.p1.controllerConnected, false);
+    assert.equal(publicState.players.p1.ready, false);
+    assert.equal(publicState.players.p2.controllerConnected, true);
+    assert.equal(publicState.players.p2.ready, false);
+    assert.equal(results.length, 0);
+  });
+
   it('rejects duplicate live controllers and tanks for a player slot', () => {
     const engine = new GameEngine();
 

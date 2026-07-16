@@ -88,7 +88,7 @@ export class GameEngine {
     }
 
     this.state.players[player].socket = null;
-    this.stopActiveMatchForSafety(`${player} tank disconnected`);
+    this.stopMatchForSafety(`${player} tank disconnected`);
     this.broadcastState();
   }
 
@@ -99,7 +99,7 @@ export class GameEngine {
 
     this.state.players[player].controllerSocket = null;
     this.state.players[player].ready = false;
-    this.stopActiveMatchForSafety(`${player} controller disconnected`);
+    this.stopMatchForSafety(`${player} controller disconnected`);
     this.broadcastState();
   }
 
@@ -244,12 +244,22 @@ export class GameEngine {
     this.queueResult();
   }
 
-  private stopActiveMatchForSafety(reason: string): void {
-    if (this.state.status !== 'ACTIVE') {
+  private stopMatchForSafety(reason: string): void {
+    if (this.state.status !== 'ACTIVE' && this.state.status !== 'COUNTDOWN') {
       return;
     }
 
-    console.warn(`Force-stopping active match: ${reason}`);
+    console.warn(`Force-stopping match: ${reason}`);
+    if (this.state.status === 'COUNTDOWN') {
+      this.clearTimers();
+      this.state.status = 'ENDED';
+      this.state.winner = null;
+      this.state.players.p1.ready = false;
+      this.state.players.p2.ready = false;
+      this.broadcastState();
+      return;
+    }
+
     this.endMatch(this.determineWinnerByScore());
   }
 

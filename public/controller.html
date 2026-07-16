@@ -143,6 +143,11 @@
         background: var(--yellow);
       }
 
+      .disconnect-key {
+        background: var(--red);
+        color: white;
+      }
+
       .setup {
         display: grid;
         grid-template-columns: 1fr 1fr;
@@ -374,6 +379,10 @@
               <div class="meter-fill" style="width: 45%"></div>
             </div>
           </div>
+
+          <button id="gameDisconnect" class="disconnect-key px-3" type="button">
+            Disconnect
+          </button>
         </section>
 
         <div class="flex gap-4 items-center">
@@ -418,6 +427,7 @@
       const statusText = document.querySelector("#statusText");
       const connectButton = document.querySelector("#connect");
       const readyButton = document.querySelector("#ready");
+      const gameDisconnectButton = document.querySelector("#gameDisconnect");
       const fireButton = document.querySelector("#fire");
       const leftButton = document.querySelector("#left");
       const rightButton = document.querySelector("#right");
@@ -457,6 +467,7 @@
         sendJson({ type: "ready", ready: nextReady });
       });
 
+      gameDisconnectButton.addEventListener("click", () => socket?.close());
       bindHeldButton(fireButton, "fire");
       bindTurnButton(leftButton, "left");
       bindTurnButton(rightButton, "right");
@@ -486,7 +497,12 @@
           connectButton.textContent = "Connect";
           playerInput.disabled = false;
           usernameInput.disabled = false;
+          if (gameState?.status === "COUNTDOWN" || gameState?.status === "ACTIVE") {
+            gameState = { ...gameState, status: "ENDED", winner: null };
+            renderState();
+          }
           updateControls();
+          requestState();
         });
 
         socket.addEventListener("message", (event) => {
@@ -613,6 +629,7 @@
         connectButton.disabled = selectedSlotLocked;
         readyButton.disabled = !connected || !lobbyStatus;
         readyButton.textContent = ready ? "Unready" : "Ready";
+        gameDisconnectButton.disabled = !connected;
         fireButton.disabled = !connected || gameState?.status !== "ACTIVE";
         leftButton.disabled = fireButton.disabled;
         rightButton.disabled = fireButton.disabled;
