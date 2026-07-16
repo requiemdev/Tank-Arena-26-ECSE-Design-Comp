@@ -88,6 +88,13 @@ void setTankMotors(float throttle, float steering) {
         left_multiplier *= (1 + steering * STEERING_FACTOR);
     }
 
+    if (left_multiplier < MINIMUM_MOTOR_DUTY_CYCLE) {
+        left_multiplier = 0;
+    }
+    if (right_multiplier < MINIMUM_MOTOR_DUTY_CYCLE) {
+        right_multiplier = 0;
+    }
+
     pwmWriteFromFraction(PWM_Channel::MOTOR_PWMA, left_multiplier);
     pwmWriteFromFraction(PWM_Channel::MOTOR_PWMB, right_multiplier);
 }

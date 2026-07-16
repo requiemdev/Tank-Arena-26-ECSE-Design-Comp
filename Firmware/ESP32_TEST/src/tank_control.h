@@ -32,6 +32,9 @@ enum MotorDirection {
 // Working range: 40 - 100
 #define TURRET_ROTATION_FACTOR 40
 
+// The minimum motor duty cycle which the motors still rotate at.
+#define MINIMUM_MOTOR_DUTY_CYCLE 0.15f
+
 // Set rotation of servo. At most one condition will be true at the same time.
 void setServoRotation(uint8_t acw_rotation, uint8_t cw_rotation);
 
