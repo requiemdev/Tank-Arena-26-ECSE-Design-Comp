@@ -75,8 +75,9 @@ When the robot detects that its own tank was hit, send the event through the sam
 
 ```json
 {
-  "type": "hit"
+  "type": "hit",
+  "direction": "front"
 }
 ```
 
-The server uses the connected tank's player slot to reduce that tank's health and update the opposing player's score.
+The server uses the connected tank's player slot to reduce that tank's health and update the opposing player's score. Direction is logged for debugging only, so every direction counts as a regular hit.

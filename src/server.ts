@@ -219,6 +219,9 @@ function handleControlMessage(
       if (!target) {
         return true;
       }
+      if (message.direction) {
+        console.log(`[hit] ${target} hit from ${message.direction}`);
+      }
       gameEngine.registerHit(target);
       return true;
     }
@@ -235,7 +238,7 @@ function parseControlMessage(payload: string):
   | { type: 'reset' }
   | { type: 'ready'; ready: boolean }
   | { type: 'state' }
-  | { type: 'hit'; target?: PlayerSlot }
+  | { type: 'hit'; target?: PlayerSlot; direction?: string }
   | null {
   try {
     const data: unknown = JSON.parse(payload);
@@ -254,7 +257,8 @@ function parseControlMessage(payload: string):
 
     if (record.type === 'hit') {
       const target = isPlayerSlot(record.target) ? record.target : undefined;
-      return { type: 'hit', target };
+      const direction = typeof record.direction === 'string' ? record.direction : undefined;
+      return { type: 'hit', target, direction };
     }
 
     return null;

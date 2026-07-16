@@ -95,18 +95,24 @@ describe('HTTP implementation', () => {
   it('applies tank hit messages over the established websocket', async (t) => {
     const engine = new GameEngine();
     const app = buildServer({ gameEngine: engine, logger: false });
+    const logs: string[] = [];
+    const originalLog = console.log;
+    console.log = (message?: unknown, ...optionalParams: unknown[]) => {
+      logs.push([message, ...optionalParams].map(String).join(' '));
+    };
     await app.listen({ host: '127.0.0.1', port: 0 });
     engine.getState().status = 'ACTIVE';
     const address = app.server.address() as AddressInfo;
     const tankSocket = new WebSocket(`ws://127.0.0.1:${address.port}/connect?type=tank&player=p2`);
     t.after(async () => {
+      console.log = originalLog;
       engine.getState().status = 'LOBBY';
       await closeSocket(tankSocket);
       await app.close();
     });
 
     await waitForOpen(tankSocket);
-    tankSocket.send(JSON.stringify({ type: 'hit' }));
+    tankSocket.send(JSON.stringify({ type: 'hit', direction: 'front' }));
     await waitUntil(() => engine.getPublicState().players.p2.health === 90);
     const removedEndpointResponse = await app.inject({
       method: 'POST',
@@ -115,6 +121,7 @@ describe('HTTP implementation', () => {
 
     assert.equal(engine.getPublicState().players.p2.health, 90);
     assert.equal(engine.getPublicState().players.p1.score, 10);
+    assert.deepEqual(logs, ['[hit] p2 hit from front']);
     assert.equal(removedEndpointResponse.statusCode, 404);
   });
 
