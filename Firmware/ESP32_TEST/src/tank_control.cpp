@@ -83,9 +83,9 @@ void setTankMotors(float throttle, float steering) {
     float right_multiplier = throttle * MOVEMENT_FACTOR;
 
     if (steering > 0) {  // Make right motor slower.
-        right_multiplier *= (1 - steering) * STEERING_FACTOR;
+        right_multiplier *= (1 - steering * STEERING_FACTOR);
     } else {  // Make left motor slower.
-        left_multiplier *= (1 + steering) * STEERING_FACTOR;
+        left_multiplier *= (1 + steering * STEERING_FACTOR);
     }
 
     pwmWriteFromFraction(PWM_Channel::MOTOR_PWMA, left_multiplier);
