@@ -1,4 +1,6 @@
 #include <Arduino.h>
+
+#include "global_config.h"
 #include "peripherals/tank_pins.h"
 
 #include "peripherals/pwm.h"
@@ -7,9 +9,9 @@
 #include "peripherals/websocket.h"
 #include "tank_control.h"
 
-#define USE_TEST_CODE // Enable/disable code used for testing peripherals
-
 #define SERIAL_BAUD_RATE 115200
+
+static volatile int8_t hit_detect_sensor = -1;
 
 // Runs once at start.
 void setup() {
@@ -78,7 +80,16 @@ void loop() {
 
 #endif // USE_TEST_CODE
 
+  if (hit_detect_sensor != -1) {
+    sendSensorHitMessage(hit_detect_sensor);
+    hit_detect_sensor = -1;
+  }
+
 #ifndef USE_TEST_CODE
   websocket_loop();
 #endif //!USE_TEST_CODE
+}
+
+void set_hit_detect_sensor(int8_t sensor) {
+  hit_detect_sensor = sensor;
 }

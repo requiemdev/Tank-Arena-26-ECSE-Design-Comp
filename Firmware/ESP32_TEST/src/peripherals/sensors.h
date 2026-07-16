@@ -2,8 +2,10 @@
 #define SENSORS_H
 
 #include <Arduino.h>
+#include "global_config.h"
 #include "tank_pins.h"
 #include "tank_timers.h"
+#include "websocket.h"
 
 enum SensorDirection {
     FRONT,

@@ -11,8 +11,10 @@ void onSensorHit(SensorDirection sensor_direction) {
     if(current_time - button_timer > DEBOUNCE_TIME_MS){
         button_pressed = true;
         button_timer = current_time;
-        Serial.printf("Sensor %d detected!\n", sensor_direction);
-        startTimer(TimerNumber::SPEAKER_TIMER);
+        restartTimer(TimerNumber::SPEAKER_TIMER);
+
+        // Queue for hit detection.
+        set_hit_detect_sensor(sensor_direction);
     }
 }
 

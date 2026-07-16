@@ -80,10 +80,11 @@ void handleWebSocketEvent(WStype_t type, uint8_t *payload, size_t length) {
 
     case WStype_CONNECTED:
       Serial.println("[ws] connected");
-      webSocket.sendTXT("{\"type\":\"tank-listener-online\"}");
+      webSocket.sendTXT("{\"type\":\"tank-listener-online\"}", (size_t)31);
       break;
 
     case WStype_TEXT:
+      stopTimer(TimerNumber::COMMAND_TIMEOUT_TIMER);
       Serial.print("[ws] message ");
       Serial.print(length);
       Serial.print(" bytes: ");
@@ -96,6 +97,7 @@ void handleWebSocketEvent(WStype_t type, uint8_t *payload, size_t length) {
         command->execute();
         delete command;
       }
+      restartTimer(TimerNumber::COMMAND_TIMEOUT_TIMER);
       break;
 
     case WStype_BIN:
@@ -127,4 +129,29 @@ void printPayload(uint8_t *payload, size_t length) {
   for (size_t i = 0; i < length; i += 1) {
     Serial.write(payload[i]);
   }
+}
+
+void sendSensorHitMessage(int8_t sensor) {
+  String* msg = new String("Direction # = ");
+  if (sensor == SensorDirection::FRONT) {
+    msg->concat("FRONT");
+  } else if (sensor == SensorDirection::LEFT) {
+    msg->concat("LEFT");
+  } else if (sensor == SensorDirection::BACK) {
+    msg->concat("BACK");
+  } else if (sensor == SensorDirection::RIGHT) {
+    msg->concat("RIGHT");
+  }
+  msg->concat("\n");
+
+  Serial.printf(msg->c_str());
+
+  #ifndef USE_TEST_CODE
+  sendMessageToServer(msg->c_str(), msg->length());
+  Serial.printf("Message sent!\n\n");
+  #endif // USE_TEST_CODE
+}
+
+void sendMessageToServer(const char* message, size_t length) {
+  webSocket.sendTXT(message, length);
 }

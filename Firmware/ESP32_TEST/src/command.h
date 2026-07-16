@@ -3,6 +3,7 @@
 
 #include <Arduino.h>
 
+#include "global_config.h"
 #include "tank_control.h"
 
 //#define PRINT_COMMAND_INTERPRET_INFORMATION
@@ -47,5 +48,7 @@ class CommandReader {
         // Returns nullptr if the payload is invalid.
         Command* interpretPayload();
 };
+
+// A command that makes the whole tank stop.
 
 #endif // COMMAND_H
