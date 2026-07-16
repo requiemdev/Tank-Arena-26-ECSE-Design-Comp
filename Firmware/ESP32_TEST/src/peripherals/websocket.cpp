@@ -150,6 +150,8 @@ void sendSensorHitMessage(int8_t sensor) {
   sendMessageToServer(msg->c_str(), msg->length());
   Serial.printf("Message sent!\n\n");
   #endif // USE_TEST_CODE
+
+  delete msg;
 }
 
 void sendMessageToServer(const char* message, size_t length) {

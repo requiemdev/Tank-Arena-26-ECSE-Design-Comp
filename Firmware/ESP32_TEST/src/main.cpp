@@ -12,6 +12,9 @@
 #define SERIAL_BAUD_RATE 115200
 
 static volatile int8_t hit_detect_sensor = -1;
+static volatile bool shut_down_tank = false;
+
+static Command* BLANK_COMMAND = new Command(0, 0, false, false, false, 0, 0);
 
 // Runs once at start.
 void setup() {
@@ -84,6 +87,11 @@ void loop() {
     sendSensorHitMessage(hit_detect_sensor);
     hit_detect_sensor = -1;
   }
+  if (shut_down_tank == true) {
+    Serial.printf("Tank shutting down, no messages received!\n");
+    BLANK_COMMAND->execute();
+    shut_down_tank = false;
+  }
 
 #ifndef USE_TEST_CODE
   websocket_loop();
@@ -92,4 +100,8 @@ void loop() {
 
 void set_hit_detect_sensor(int8_t sensor) {
   hit_detect_sensor = sensor;
+}
+
+void queue_disable_tank() {
+  shut_down_tank = true;
 }

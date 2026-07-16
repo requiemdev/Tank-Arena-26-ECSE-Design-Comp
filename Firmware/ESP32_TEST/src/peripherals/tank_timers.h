@@ -6,7 +6,7 @@
 #include "command.h"
 
 #define SPEAKER_DURATION_US 500000UL // 0.5s
-#define SWITCH_OFF_AFTER_COMMAND_TIMEOUT_DURATION_US 1000000UL // 1.0s
+#define SWITCH_OFF_AFTER_COMMAND_TIMEOUT_DURATION_US 980000UL // 0.98s, ensure off-sync from command sends.
 
 enum TimerNumber {
     SPEAKER_TIMER,

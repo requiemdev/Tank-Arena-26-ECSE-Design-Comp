@@ -3,16 +3,13 @@
 hw_timer_t* speaker_timer;
 hw_timer_t* command_receive_timer;
 
-static Command* BLANK_COMMAND = new Command(0, 0, false, false, false, 0, 0);
-
 // Disable speaker
 void IRAM_ATTR onSpeakerRunout() {
     pwmWrite(PWM_Channel::SPEAKER, 0);
 }
 
 void IRAM_ATTR onCommandReceiveRunout() {
-    Serial.printf("Tank shutting down, no messages received!\n");
-    BLANK_COMMAND->execute();
+    queue_disable_tank();
 }
 
 void initialiseTimers() {
