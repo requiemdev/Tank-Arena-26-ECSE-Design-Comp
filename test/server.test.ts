@@ -40,6 +40,7 @@ describe('HTTP implementation', () => {
     assert.match(response.headers['content-type'] as string, /text\/html/);
     assert.match(response.body, /Tank Controller/);
     assert.match(response.body, /nipplejs/);
+    assert.match(response.body, /countdownScreen/);
   });
 
   it('starts countdown once and rejects duplicate start requests while in progress', async (t) => {

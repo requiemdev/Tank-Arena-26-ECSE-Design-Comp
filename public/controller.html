@@ -224,6 +224,20 @@
         justify-items: center;
       }
 
+      #countdownScreen {
+        display: grid;
+        min-height: min(68dvh, 520px);
+        place-items: center;
+        text-align: center;
+      }
+
+      .countdown-number {
+        color: var(--yellow);
+        font-size: clamp(6rem, 32vw, 16rem);
+        line-height: 0.9;
+        text-shadow: 0 10px 0 var(--line);
+      }
+
       #inGame > div {
         min-height: min(68dvh, 520px);
       }
@@ -362,6 +376,16 @@
         </div>
       </section>
 
+      <section id="countdownScreen" class="hidden pt-2">
+        <div>
+          <div id="countdownNumber" class="countdown-number font-bold">3</div>
+          <div class="font-bold">Get ready</div>
+          <button id="countdownDisconnect" class="disconnect-key px-3 mt-4" type="button">
+            Disconnect
+          </button>
+        </div>
+      </section>
+
       <section id="inGame" class="hidden pt-2">
         <section class="flex gap-4 text-center items-center pb-3">
           <div class="flex items-center gap-2 w-full">
@@ -427,6 +451,8 @@
       const statusText = document.querySelector("#statusText");
       const connectButton = document.querySelector("#connect");
       const readyButton = document.querySelector("#ready");
+      const countdownDisconnectButton = document.querySelector("#countdownDisconnect");
+      const countdownNumber = document.querySelector("#countdownNumber");
       const gameDisconnectButton = document.querySelector("#gameDisconnect");
       const fireButton = document.querySelector("#fire");
       const leftButton = document.querySelector("#left");
@@ -435,6 +461,7 @@
       const p1StateText = document.querySelector("#p1State");
       const p2StateText = document.querySelector("#p2State");
       const preGame = document.querySelector("#preGame");
+      const countdownScreen = document.querySelector("#countdownScreen");
       const inGame = document.querySelector("#inGame");
       const lobbyInfo = document.querySelectorAll(".lobby-info");
       const joystickZone = document.querySelector(".pad");
@@ -468,6 +495,7 @@
       });
 
       gameDisconnectButton.addEventListener("click", () => socket?.close());
+      countdownDisconnectButton.addEventListener("click", () => socket?.close());
       bindHeldButton(fireButton, "fire");
       bindTurnButton(leftButton, "left");
       bindTurnButton(rightButton, "right");
@@ -565,6 +593,7 @@
 
         if (gameState.status === "COUNTDOWN") {
           matchStateText.textContent = `Starting in ${gameState.countdownSeconds}`;
+          countdownNumber.textContent = gameState.countdownSeconds;
         } else if (gameState.status === "ACTIVE") {
           matchStateText.textContent = `Match active: ${gameState.remainingSeconds}s left`;
         } else if (gameState.status === "ENDED") {
@@ -577,11 +606,14 @@
             : "Waiting for both players to ready up";
         }
 
-        const inMatch = gameState.status === "COUNTDOWN" || gameState.status === "ACTIVE";
+        const isCountdown = gameState.status === "COUNTDOWN";
+        const isActive = gameState.status === "ACTIVE";
+        const inMatch = isCountdown || isActive;
         preGame.classList.toggle("hidden", inMatch);
-        inGame.classList.toggle("hidden", !inMatch);
+        countdownScreen.classList.toggle("hidden", !isCountdown);
+        inGame.classList.toggle("hidden", !isActive);
         lobbyInfo.forEach((element) => element.classList.toggle("hidden", inMatch));
-        if (inMatch) {
+        if (isActive) {
           window.requestAnimationFrame(setupJoystick);
         } else {
           teardownJoystick();
@@ -629,6 +661,7 @@
         connectButton.disabled = selectedSlotLocked;
         readyButton.disabled = !connected || !lobbyStatus;
         readyButton.textContent = ready ? "Unready" : "Ready";
+        countdownDisconnectButton.disabled = !connected;
         gameDisconnectButton.disabled = !connected;
         fireButton.disabled = !connected || gameState?.status !== "ACTIVE";
         leftButton.disabled = fireButton.disabled;
