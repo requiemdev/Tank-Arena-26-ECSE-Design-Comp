@@ -633,24 +633,12 @@
       }
 
       function syncPlayerOptions() {
-        const selected = playerInput.value;
-        const connected = socket?.readyState === WebSocket.OPEN;
         for (const option of playerInput.options) {
           const player = gameState.players[option.value];
-          option.disabled =
-            player.controllerConnected && !(connected && option.value === selected);
+          option.disabled = false;
           option.textContent = `${option.value === "p1" ? "Player 1" : "Player 2"}${
-            option.disabled ? " (locked)" : ""
+            player.controllerConnected ? " (locked)" : ""
           }`;
-        }
-
-        if (playerInput.selectedOptions[0]?.disabled) {
-          const openOption = Array.from(playerInput.options).find(
-            (option) => !option.disabled,
-          );
-          if (openOption) {
-            playerInput.value = openOption.value;
-          }
         }
       }
 

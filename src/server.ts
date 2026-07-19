@@ -16,7 +16,7 @@ export interface EdgeServerOptions {
 
 export function buildServer(options: EdgeServerOptions = {}) {
   const app = Fastify({
-    logger: options.logger ?? true 
+    logger: options.logger ?? false
   });
   const gameEngine = options.gameEngine ?? new GameEngine();
   const wss = new WebSocketServer({
@@ -133,6 +133,8 @@ function routeController(gameEngine: GameEngine, socket: WebSocket, player: Play
     return;
   }
 
+  console.info(`${player} controller connected${username ? ` as ${username}` : ''}`);
+
   socket.on('message', (data) => {
     const payload = rawDataToString(data);
     if (handleControlMessage(gameEngine, payload, player, socket)) {
@@ -157,6 +159,8 @@ function routeTank(gameEngine: GameEngine, socket: WebSocket, player: PlayerSlot
     socket.close(1008, `${player} tank is already connected`);
     return;
   }
+
+  console.info(`${player} tank connected${username ? ` as ${username}` : ''}`);
 
   socket.on('message', (data) => {
     const payload = rawDataToString(data);
@@ -218,9 +222,6 @@ function handleControlMessage(
       const target = message.target ?? defaultPlayer;
       if (!target) {
         return true;
-      }
-      if (message.direction) {
-        console.log(`[hit] ${target} hit from ${message.direction}`);
       }
       gameEngine.registerHit(target);
       return true;
