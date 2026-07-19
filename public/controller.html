@@ -5,26 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>ECSE Tank Controller</title>
     <script src="https://cdn.jsdelivr.net/npm/nipplejs@0.10.2/dist/nipplejs.min.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
     <style>
       :root {
-        color-scheme: dark;
-        --bg: #29282f;
-        --shell: #403d46;
-        --bezel: #151922;
-        --key: #5e6b78;
-        --key-dark: #2d333d;
-        --text: #edf2f7;
-        --muted: #a9b3bd;
-        --cyan: #48d9e9;
-        --blue: #3da7ff;
-        --yellow: #efc733;
-        --red: #d92532;
-        --line: #10141b;
-        --stick-size: clamp(120px, min(42vw, 48dvh), 340px);
-        --button-size: clamp(70px, min(18vw, 22dvh), 112px);
-        --pregame-gap: clamp(6px, 1.5vw, 14px);
-        --pregame-control-height: clamp(38px, 7vw, 56px);
+        color-scheme: light;
+        --screen: #b8bd68;
+        --ink: #272929;
+        --shell: #c4bebb;
+        --control: #494786;
+        --danger: #9a2257;
+        --stick-size: clamp(6.5rem, min(18vw, 46dvh), 13rem);
+        --button-size: clamp(4.75rem, min(11vw, 24dvh), 7rem);
+        --action-gap: clamp(1.25rem, 3vw, 2.5rem);
       }
 
       * {
@@ -34,406 +25,673 @@
       body {
         min-height: 100dvh;
         margin: 0;
-        background:
-          radial-gradient(circle at 14% 0%, rgba(255, 255, 255, 0.12), transparent 24rem),
-          var(--shell);
-        color: var(--text);
+        display: grid;
+        place-items: center;
+        padding: clamp(0.5rem, 2vw, 1.5rem);
+        background: var(--ink);
+        color: var(--ink);
         font-family:
           ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
           monospace;
       }
 
       .controller-shell {
-        min-height: 100dvh;
-        width: 100%;
-        max-width: none;
-        padding: clamp(14px, 3vw, 28px);
+        position: relative;
+        width: min(100%, 90rem);
+        min-height: min(92dvh, 48rem);
+        display: grid;
+        grid-template:
+          "brand brand brand" auto
+          "move screen action" minmax(0, 1fr) /
+          minmax(7rem, 0.75fr) minmax(15rem, 1.65fr) minmax(8rem, 0.8fr);
+        gap: clamp(0.75rem, 2.4vw, 2.5rem);
+        align-items: center;
+        padding: clamp(1rem, 3vw, 2.75rem);
         background:
-          linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 8rem),
+          radial-gradient(circle at 18% 12%, rgba(255, 255, 255, 0.55), transparent 16rem),
           var(--shell);
-        box-shadow: inset 0 0 0 2px #5a5660;
+        border: clamp(0.2rem, 0.5vw, 0.45rem) solid var(--ink);
+        border-radius: 3.75rem 3.75rem 5rem 4rem / 3rem 3rem 4.25rem 4.25rem;
+        box-shadow:
+          inset 0 -0.65rem 0 rgba(39, 41, 41, 0.2),
+          0 1rem 2.5rem rgba(0, 0, 0, 0.32);
+      }
+
+      .controller-shell::after {
+        content: "";
+        position: absolute;
+        right: clamp(2rem, 5vw, 5rem);
+        bottom: clamp(0.75rem, 2.5dvh, 1.75rem);
+        width: clamp(5.5rem, 10vw, 9rem);
+        height: clamp(1rem, 4dvh, 2.25rem);
+        pointer-events: none;
+        background: repeating-linear-gradient(
+          105deg,
+          transparent 0 0.55rem,
+          rgba(39, 41, 41, 0.2) 0.55rem 0.72rem,
+          rgba(255, 255, 255, 0.32) 0.72rem 0.8rem,
+          transparent 0.8rem 1.35rem
+        );
+        border-radius: 0.25rem;
+        transform: skewX(-8deg);
+      }
+
+      .brand-strip {
+        grid-area: brand;
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        align-items: center;
+        gap: 1rem;
+        padding-inline: clamp(0.5rem, 2vw, 1.5rem);
+      }
+
+      .brand-mark {
+        margin: 0;
+        color: var(--control);
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: clamp(0.8rem, 1.6vw, 1.2rem);
+        font-weight: 900;
+        font-style: italic;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+      }
+
+      .brand-model {
+        justify-self: end;
+        min-width: 0;
+        color: rgba(39, 41, 41, 0.66);
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: clamp(0.58rem, 1vw, 0.72rem);
+        font-weight: 700;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+      }
+
+      .move-deck,
+      .action-deck {
+        align-self: stretch;
+        display: grid;
+        align-content: center;
+        justify-items: center;
+        gap: clamp(0.65rem, 2dvh, 1.25rem);
+      }
+
+      .move-deck {
+        grid-area: move;
+      }
+
+      .action-deck {
+        grid-area: action;
+      }
+
+      .screen-bezel {
+        grid-area: screen;
+        align-self: stretch;
+        min-height: min(70dvh, 34rem);
+        padding: clamp(0.75rem, 1.8vw, 1.35rem);
+        background: var(--ink);
+        border: 0.2rem solid var(--ink);
+        border-radius: 1.6rem 1.6rem 0.7rem 0.7rem;
+        box-shadow:
+          inset 0 0.2rem 0 rgba(255, 255, 255, 0.12),
+          0 0.55rem 0 rgba(39, 41, 41, 0.34);
+      }
+
+      .screen {
+        height: 100%;
+        min-height: 0;
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr);
+        overflow: hidden;
+        background:
+          repeating-linear-gradient(
+            0deg,
+            rgba(39, 41, 41, 0.045) 0,
+            rgba(39, 41, 41, 0.045) 1px,
+            transparent 1px,
+            transparent 4px
+          ),
+          var(--screen);
+        border: 0.18rem solid var(--ink);
+        border-radius: 0.45rem;
+        box-shadow: inset 0 0 1.5rem rgba(39, 41, 41, 0.22);
+      }
+
+      .screen-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 0.75rem;
+        padding: clamp(0.65rem, 1.4vw, 1rem);
+        border-bottom: 0.16rem solid rgba(39, 41, 41, 0.7);
       }
 
       h1 {
-        color: var(--red);
-        font-size: 1rem;
-        letter-spacing: 0;
+        margin: 0;
+        font-size: clamp(0.82rem, 1.7vw, 1.15rem);
+        font-weight: 900;
+        letter-spacing: 0.08em;
         text-transform: uppercase;
-        text-shadow: 0 2px 0 var(--line);
+      }
+
+      .screen-content {
+        min-height: 0;
+        overflow: auto;
+        padding: clamp(0.7rem, 1.7vw, 1.2rem);
+        scrollbar-color: var(--ink) var(--screen);
+      }
+
+      .status {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        font-size: clamp(0.56rem, 1.2vw, 0.72rem);
+        font-weight: 800;
+        white-space: nowrap;
+        text-transform: uppercase;
+      }
+
+      .dot {
+        width: 0.62rem;
+        height: 0.62rem;
+        flex: 0 0 auto;
+        background: var(--ink);
+        border: 0.12rem solid var(--ink);
+        border-radius: 50%;
+      }
+
+      .dot.connected {
+        background: var(--screen);
+        box-shadow: 0 0 0 0.12rem var(--ink), 0 0 0 0.26rem var(--screen);
+      }
+
+      #preGame {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: clamp(0.55rem, 1.4vw, 0.9rem);
+        align-items: end;
+      }
+
+      #preGame > div {
+        grid-column: 1 / -1;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: clamp(0.55rem, 1.4vw, 0.9rem);
       }
 
       label {
         display: grid;
-        gap: 4px;
-        color: var(--muted);
-        font-size: 0.72rem;
+        gap: 0.3rem;
+        font-size: clamp(0.58rem, 1.2vw, 0.7rem);
+        font-weight: 800;
+        letter-spacing: 0.08em;
         text-transform: uppercase;
       }
 
       input,
       select,
-      button,
-      .player-card,
-      .meter {
-        border: 2px solid var(--line);
-        border-radius: 6px;
-        box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.18), 0 4px 0 var(--line);
+      button {
+        font: inherit;
       }
 
       input,
       select {
         width: 100%;
-        min-height: 40px;
-        padding: 8px 14px 8px 16px;
-        background: var(--key);
-        color: var(--text);
+        min-height: clamp(2.25rem, 6dvh, 2.8rem);
+        padding: 0.55rem 0.7rem;
+        background: rgba(132, 208, 125, 0.35);
+        color: var(--ink);
+        border: 0.14rem solid var(--ink);
+        border-radius: 0.2rem;
         outline: none;
       }
 
-      input:focus,
-      select:focus,
-      button:focus-visible {
-        border-color: var(--yellow);
-      }
-
       button {
-        min-height: 46px;
-        color: #10141b;
+        min-height: clamp(2.25rem, 6dvh, 2.8rem);
+        padding: 0.55rem 0.8rem;
+        color: #fff;
         font-weight: 900;
+        letter-spacing: 0.05em;
         text-transform: uppercase;
-        transition:
-          transform 120ms ease,
-          box-shadow 120ms ease,
-          filter 120ms ease;
+        border: 0.16rem solid var(--ink);
+        border-radius: 0.3rem;
+        box-shadow: 0 0.28rem 0 var(--ink);
+        transition: transform 120ms ease, filter 120ms ease, box-shadow 120ms ease;
       }
 
-      button:active {
-        transform: translateY(3px);
-        box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.12), 0 1px 0 var(--line);
+      input:focus-visible,
+      select:focus-visible,
+      button:focus-visible {
+        outline: 0.2rem solid var(--control);
+        outline-offset: 0.18rem;
       }
 
       button:not(:disabled):hover {
-        filter: brightness(1.08);
+        filter: brightness(1.13);
       }
 
-      .connect-key {
-        background: var(--cyan);
+      button:not(:disabled):active {
+        transform: translateY(0.22rem);
+        box-shadow: 0 0.06rem 0 var(--ink);
       }
 
+      .connect-key,
       .ready-key {
-        background: var(--blue);
+        background: var(--control);
+      }
+
+      .screen input,
+      .screen select {
+        background: var(--screen);
+      }
+
+      .screen .connect-key,
+      .screen .ready-key {
+        background: var(--ink);
+        color: var(--screen);
+      }
+
+      .screen input:focus-visible,
+      .screen select:focus-visible,
+      .screen button:focus-visible {
+        outline-color: var(--ink);
+      }
+
+      .screen button:not(:disabled):hover {
+        background: var(--screen);
+        color: var(--ink);
+        filter: none;
+      }
+
+      .lobby-info {
+        margin-top: clamp(0.65rem, 1.6vw, 1rem);
+      }
+
+      section.lobby-info {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.65rem;
+      }
+
+      .player-card {
+        min-width: 0;
+        padding: 0.65rem;
+        background: rgba(39, 41, 41, 0.09);
+        border: 0.12rem solid rgba(39, 41, 41, 0.65);
+      }
+
+      .player-card strong,
+      #matchState {
+        font-weight: 900;
+      }
+
+      .player-state {
+        margin-top: 0.25rem;
+        font-size: clamp(0.56rem, 1.15vw, 0.7rem);
+        line-height: 1.35;
+      }
+
+      #matchState {
+        padding-top: 0.65rem;
+        border-top: 0.14rem solid rgba(39, 41, 41, 0.6);
+        font-size: clamp(0.68rem, 1.4vw, 0.85rem);
+      }
+
+      #countdownScreen {
+        min-height: clamp(10rem, 43dvh, 22rem);
+        display: grid;
+        place-items: center;
+        text-align: center;
+      }
+
+      .countdown-number {
+        font-size: clamp(5rem, 18vw, 11rem);
+        font-weight: 900;
+        line-height: 0.85;
+        text-shadow: 0.24rem 0.24rem 0 rgba(39, 41, 41, 0.22);
+      }
+
+      .countdown-label {
+        margin-top: 0.8rem;
+        font-weight: 900;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      #inGame {
+        min-height: clamp(10rem, 43dvh, 22rem);
+        display: grid;
+        align-content: center;
+      }
+
+      .hud {
+        display: grid;
+        gap: clamp(0.9rem, 2.2vw, 1.5rem);
+      }
+
+      .hud-label {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 1rem;
+        font-size: clamp(0.72rem, 1.7vw, 1rem);
+        font-weight: 900;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+      }
+
+      .meter {
+        height: clamp(1rem, 3dvh, 1.45rem);
+        overflow: hidden;
+        border: 0.16rem solid var(--ink);
+        background: rgba(39, 41, 41, 0.14);
+      }
+
+      .meter-fill {
+        height: 100%;
+        background: var(--ink);
+        transition: width 180ms ease;
+      }
+
+      .pad {
+        position: relative;
+        width: var(--stick-size);
+        height: var(--stick-size);
+        display: grid;
+        place-items: center;
+        touch-action: none;
+        user-select: none;
+      }
+
+      #joystick {
+        width: 100%;
+        aspect-ratio: 1;
+        position: relative;
+        pointer-events: none;
+        background:
+          radial-gradient(circle at 42% 36%, #555858 0 10%, var(--ink) 45% 62%, #171818 63%);
+        border: clamp(0.2rem, 0.5vw, 0.42rem) solid var(--ink);
+        border-radius: 50%;
+        box-shadow:
+          inset 0.35rem 0.45rem 0 rgba(255, 255, 255, 0.08),
+          0 0.5rem 0 rgba(39, 41, 41, 0.38);
+        transition: opacity 120ms ease;
+      }
+
+      .pad:has(.nipple) #joystick {
+        opacity: 0.28;
+      }
+
+      .pad .nipple .back {
+        background: var(--ink) !important;
+        opacity: 0.42 !important;
+      }
+
+      .pad .nipple .front {
+        background: #3b3e3e !important;
+        opacity: 1 !important;
+        box-shadow: inset 0.2rem 0.25rem 0 rgba(255, 255, 255, 0.1);
+      }
+
+      .actions {
+        display: grid;
+        grid-template-columns: repeat(2, var(--button-size));
+        gap: var(--action-gap);
+        justify-content: center;
       }
 
       .action-key {
         width: var(--button-size);
         min-height: 0;
         aspect-ratio: 1;
+        display: grid;
+        place-items: center;
+        padding: 0;
+        text-align: center;
         border-radius: 50%;
-        justify-self: center;
+        box-shadow:
+          inset 0.25rem 0.25rem 0 rgba(255, 255, 255, 0.14),
+          0.35rem 0.5rem 0 var(--ink);
         touch-action: none;
         user-select: none;
       }
 
-      .fire-key {
-        background: var(--red);
-        color: white;
+      .action-key:not(:disabled):active {
+        transform: translateY(0.25rem);
       }
 
       .turn-key {
-        background: var(--yellow);
+        background: var(--control);
+      }
+
+      .turn-key svg {
+        width: 56%;
+        height: 56%;
+        display: block;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 2.5;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .fire-key {
+        grid-column: 1 / -1;
+        justify-self: center;
+        background: var(--danger);
       }
 
       .disconnect-key {
-        background: var(--red);
-        color: white;
-      }
-
-      .setup {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 10px;
-      }
-
-      .status {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        color: var(--text);
-        font-size: 0.72rem;
-        white-space: nowrap;
-        padding: 7px 9px;
-        background: var(--bezel);
-        border: 2px solid var(--line);
+        justify-self: center;
+        min-width: clamp(3.8rem, 8vw, 5.4rem);
+        min-height: clamp(1.75rem, 4dvh, 2.2rem);
+        padding: 0.3rem 0.65rem;
+        background: var(--danger);
         border-radius: 999px;
+        font-size: clamp(0.58rem, 1.1vw, 0.72rem);
       }
 
-      .dot {
-        width: 10px;
-        height: 10px;
-        border-radius: 50%;
-        background: var(--red);
-        box-shadow: 0 0 12px rgba(217, 37, 50, 0.85);
-      }
-
-      .dot.connected {
-        background: var(--cyan);
-        box-shadow: 0 0 12px rgba(72, 217, 233, 0.85);
+      button:disabled,
+      select:disabled,
+      input:disabled {
+        cursor: not-allowed;
+        opacity: 0.45;
       }
 
       .hidden {
         display: none !important;
       }
 
-      #joystick {
-        width: var(--stick-size);
-        aspect-ratio: 1;
-        position: relative;
-        border-radius: 50%;
-        pointer-events: none;
-      }
-
-      .pad {
-        display: grid;
-        place-items: center;
-        min-height: var(--stick-size);
-        position: relative;
-        touch-action: none;
-        user-select: none;
-      }
-
-      .meter {
-        height: 10px;
-        overflow: hidden;
-        background: var(--bezel);
-      }
-
-      .meter-fill {
-        height: 100%;
-        border-radius: 0 999px 999px 0;
-        background: linear-gradient(90deg, var(--cyan), var(--blue));
-      }
-
-      .player-card {
-        background: var(--key-dark);
-      }
-
-      .actions {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 14px;
-        justify-items: center;
-      }
-
-      #countdownScreen {
-        display: grid;
-        min-height: min(68dvh, 520px);
-        place-items: center;
-        text-align: center;
-      }
-
-      .countdown-number {
-        color: var(--yellow);
-        font-size: clamp(6rem, 32vw, 16rem);
-        line-height: 0.9;
-        text-shadow: 0 10px 0 var(--line);
-      }
-
-      #inGame > div {
-        min-height: min(68dvh, 520px);
-      }
-
-      .fire-key {
-        grid-column: 1 / -1;
-      }
-
-      button:disabled,
-      select:disabled,
-      input:disabled {
-        opacity: 0.55;
-      }
-
-      #preGame {
-        grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr));
-        gap: var(--pregame-gap);
-        align-items: end;
-        font-size: clamp(0.68rem, 1.6vw, 0.78rem);
-      }
-
-      #preGame input,
-      #preGame select,
-      #preGame button {
-        min-height: var(--pregame-control-height);
-        padding: clamp(7px, 1.8vw, 12px) clamp(10px, 2.4vw, 18px);
-      }
-
-      #preGame > div {
-        grid-column: 1 / -1;
-        gap: var(--pregame-gap);
-      }
-
-      @media (min-width: 780px) {
-        .controller-shell {
-          padding: 24px;
-        }
-
-        .setup {
-          grid-template-columns: 2fr 1fr 1fr;
-        }
-
-        #preGame {
-          grid-template-columns: minmax(10rem, 1fr) minmax(14rem, 1.4fr) minmax(16rem, 1fr);
-        }
-
-        #preGame > div {
-          grid-column: auto;
-        }
-      }
-
       @media (orientation: landscape) and (max-height: 520px) {
         :root {
-          --stick-size: clamp(108px, min(34vw, 58dvh), 260px);
-          --button-size: clamp(62px, min(13vw, 24dvh), 104px);
+          --stick-size: clamp(5rem, min(18vw, 44dvh), 13rem);
+          --button-size: clamp(3.5rem, min(11vw, 23dvh), 7rem);
+          --action-gap: clamp(0.65rem, 2vw, 1.25rem);
+        }
+
+        body {
+          padding: 0.5rem;
+        }
+
+        .controller-shell {
+          height: calc(100dvh - 1rem);
+          min-height: 0;
+          grid-template-columns:
+            minmax(var(--stick-size), 0.75fr)
+            minmax(12rem, 1.65fr)
+            minmax(calc(var(--button-size) * 2 + var(--action-gap)), 0.8fr);
+          grid-template-rows: auto minmax(0, 1fr);
+          gap: 0.45rem clamp(0.75rem, 2.4vw, 2.5rem);
+          padding: 0.5rem 0.75rem 0.75rem;
+          border-radius: 2rem 2rem 2.7rem 2.2rem;
+        }
+
+        .screen-bezel {
+          height: 100%;
+          min-height: 0;
+          overflow: hidden;
+        }
+
+        .brand-strip {
+          min-height: 1rem;
+          grid-template-columns:
+            minmax(var(--stick-size), 0.75fr)
+            minmax(12rem, 1.65fr)
+            minmax(calc(var(--button-size) * 2 + var(--action-gap)), 0.8fr);
+          column-gap: clamp(0.75rem, 2.4vw, 2.5rem);
+          padding-inline: 0;
+        }
+
+        .screen-content {
+          padding: 0.6rem 0.75rem;
+        }
+
+        #countdownScreen,
+        #inGame {
+          min-height: 8rem;
+        }
+      }
+
+      @media (orientation: portrait) {
+        body {
+          padding: 0;
         }
 
         .controller-shell {
           min-height: 100dvh;
-          padding: 12px 18px;
+          grid-template:
+            "brand brand" auto
+            "screen screen" minmax(24rem, auto)
+            "move action" auto /
+            1fr 1fr;
+          border-width: 0;
+          border-radius: 0;
         }
 
-        .controller-shell > div:first-child {
-          margin-bottom: 8px;
+        .screen-bezel {
+          min-height: 24rem;
         }
 
-        #preGame {
-          grid-template-columns: minmax(8rem, 1fr) minmax(10rem, 1.25fr) minmax(11rem, 1fr);
-          align-items: end;
+        .move-deck,
+        .action-deck {
+          align-self: center;
         }
+      }
 
-        #preGame .grid {
-          grid-column: auto;
-        }
-
-        #inGame {
-          display: grid;
-          grid-template-columns: minmax(var(--stick-size), 1fr) minmax(calc(var(--button-size) * 2 + 14px), 1fr);
-          gap: 14px;
-          align-items: center;
-        }
-
-        #inGame > section {
-          grid-column: 1 / -1;
-          padding-bottom: 0;
-        }
-
-        #inGame > div {
-          display: contents;
-        }
-
-        #inGame .pad {
-          min-height: var(--stick-size);
-          width: 100%;
-        }
-
-        #inGame .actions {
-          align-content: center;
-          width: 100%;
+      @media (max-width: 390px) {
+        #preGame,
+        section.lobby-info {
+          grid-template-columns: 1fr;
         }
       }
     </style>
   </head>
   <body>
-    <main class="controller-shell text-sm">
-      <div class="flex justify-between items-center">
-        <h1 class="font-bold">Tank Controller</h1>
+    <main class="controller-shell">
+      <header class="brand-strip">
+        <p class="brand-mark">Pixel Armor</p>
+        <button id="gameDisconnect" class="disconnect-key" type="button">
+          End
+        </button>
+        <span class="brand-model">ECSE handheld control unit</span>
+      </header>
 
-        <div class="status">
-          <span id="statusDot" class="dot"></span
-          ><span id="statusText">Disconnected</span>
-        </div>
-      </div>
-
-      <section id="preGame" class="text-xs grid gap-2 pt-2">
-        <label>
-          Player
-          <select id="player">
-            <option value="p1">Player 1</option>
-            <option value="p2">Player 2</option>
-          </select>
-        </label>
-        <label>
-          Name
-          <input id="username" autocomplete="name" value="Driver" />
-        </label>
-
-        <div class="grid grid-cols-2 gap-2 col-span-2">
-          <button id="connect" class="connect-key p-2" type="button">
-            Connect
-          </button>
-
-          <button id="ready" class="ready-key p-2" type="button">
-            Ready
-          </button>
+      <section class="move-deck" aria-label="Movement controls">
+        <div class="pad" aria-label="Joystick">
+          <div id="joystick"></div>
         </div>
       </section>
 
-      <section id="countdownScreen" class="hidden pt-2">
-        <div>
-          <div id="countdownNumber" class="countdown-number font-bold">3</div>
-          <div class="font-bold">Get ready</div>
-          <button id="countdownDisconnect" class="disconnect-key px-3 mt-4" type="button">
-            Disconnect
-          </button>
-        </div>
-      </section>
-
-      <section id="inGame" class="hidden pt-2">
-        <section class="flex gap-4 text-center items-center pb-3">
-          <div class="flex items-center gap-2 w-full">
-            <div class="w-12">HP</div>
-            <div class="meter flex-1">
-              <div id="healthFill" class="meter-fill" style="width: 100%"></div>
+      <section class="screen-bezel" aria-label="Tank controller display">
+        <div class="screen">
+          <header class="screen-header">
+            <h1>Tank controller</h1>
+            <div class="status">
+              <span id="statusDot" class="dot"></span>
+              <span id="statusText">Disconnected</span>
             </div>
-            <div id="healthValue" class="w-10 text-right font-bold">100</div>
-          </div>
+          </header>
 
-          <button id="gameDisconnect" class="disconnect-key px-3" type="button">
-            Disconnect
+          <div class="screen-content">
+            <section id="preGame">
+              <label>
+                Player
+                <select id="player">
+                  <option value="p1">Player 1</option>
+                  <option value="p2">Player 2</option>
+                </select>
+              </label>
+              <label>
+                Name
+                <input id="username" autocomplete="name" value="Driver" />
+              </label>
+
+              <div>
+                <button id="connect" class="connect-key" type="button">
+                  Connect
+                </button>
+                <button id="ready" class="ready-key" type="button">
+                  Ready
+                </button>
+              </div>
+            </section>
+
+            <section id="countdownScreen" class="hidden">
+              <div>
+                <div id="countdownNumber" class="countdown-number">3</div>
+                <div class="countdown-label">Get ready</div>
+              </div>
+            </section>
+
+            <section id="inGame" class="hidden">
+              <div class="hud">
+                <div class="hud-label">
+                  <span>Hull integrity</span>
+                  <span><span id="healthValue">100</span> HP</span>
+                </div>
+                <div class="meter">
+                  <div id="healthFill" class="meter-fill" style="width: 100%"></div>
+                </div>
+              </div>
+            </section>
+
+            <section class="lobby-info" aria-live="polite">
+              <div id="p1Card" class="player-card">
+                <strong>Player 1</strong>
+                <div id="p1State" class="player-state">Open</div>
+              </div>
+              <div id="p2Card" class="player-card">
+                <strong>Player 2</strong>
+                <div id="p2State" class="player-state">Open</div>
+              </div>
+            </section>
+
+            <div id="matchState" class="lobby-info" aria-live="polite">
+              Waiting for players
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="action-deck" aria-label="Action controls">
+        <div class="actions">
+          <button id="left" class="action-key turn-key" type="button" aria-label="Rotate anticlockwise">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M3 3v5h5" />
+              <path d="M3.6 8A9 9 0 1 1 3 12" />
+            </svg>
           </button>
-        </section>
-
-        <div class="flex gap-4 items-center">
-          <div class="pad w-1/2" aria-label="Joystick">
-            <div id="joystick" class=""></div>
-          </div>
-
-          <div class="actions w-1/2">
-            <button id="fire" class="action-key fire-key p-2" type="button">
-              Fire
-            </button>
-            <button id="left" class="action-key turn-key p-2" type="button" aria-label="Rotate left">
-              Left
-            </button>
-            <button id="right" class="action-key turn-key p-2" type="button" aria-label="Rotate right">
-              Right
-            </button>
-          </div>
+          <button id="right" class="action-key turn-key" type="button" aria-label="Rotate clockwise">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M21 3v5h-5" />
+              <path d="M20.4 8A9 9 0 1 0 21 12" />
+            </svg>
+          </button>
+          <button id="fire" class="action-key fire-key" type="button">
+            Fire
+          </button>
         </div>
       </section>
-
-      <section class="lobby-info grid grid-cols-2 gap-2 pt-2" aria-live="polite">
-        <div id="p1Card" class="player-card p-2">
-          <div class="font-bold">Player 1</div>
-          <div id="p1State" class="text-xs" style="color: var(--muted)">Open</div>
-        </div>
-        <div id="p2Card" class="player-card p-2">
-          <div class="font-bold">Player 2</div>
-          <div id="p2State" class="text-xs" style="color: var(--muted)">Open</div>
-        </div>
-      </section>
-
-      <div id="matchState" class="lobby-info pt-2 font-bold" aria-live="polite">
-        Waiting for players
-      </div>
     </main>
 
     <script>
@@ -443,7 +701,6 @@
       const statusText = document.querySelector("#statusText");
       const connectButton = document.querySelector("#connect");
       const readyButton = document.querySelector("#ready");
-      const countdownDisconnectButton = document.querySelector("#countdownDisconnect");
       const countdownNumber = document.querySelector("#countdownNumber");
       const gameDisconnectButton = document.querySelector("#gameDisconnect");
       const healthFill = document.querySelector("#healthFill");
@@ -489,7 +746,6 @@
       });
 
       gameDisconnectButton.addEventListener("click", () => socket?.close());
-      countdownDisconnectButton.addEventListener("click", () => socket?.close());
       bindHeldButton(fireButton, "fire");
       bindTurnButton(leftButton, "left");
       bindTurnButton(rightButton, "right");
@@ -652,7 +908,6 @@
         connectButton.disabled = selectedSlotLocked;
         readyButton.disabled = !connected || !lobbyStatus;
         readyButton.textContent = ready ? "Unready" : "Ready";
-        countdownDisconnectButton.disabled = !connected;
         gameDisconnectButton.disabled = !connected;
         fireButton.disabled = !connected || gameState?.status !== "ACTIVE";
         leftButton.disabled = fireButton.disabled;
