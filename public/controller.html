@@ -391,17 +391,9 @@
           <div class="flex items-center gap-2 w-full">
             <div class="w-12">HP</div>
             <div class="meter flex-1">
-              <div class="meter-fill" style="width: 45%"></div>
+              <div id="healthFill" class="meter-fill" style="width: 100%"></div>
             </div>
-          </div>
-
-          <div class="border-l-2 h-6"></div>
-
-          <div class="flex items-center gap-2 w-full">
-            <div class="w-16">Shield</div>
-            <div class="meter flex-1">
-              <div class="meter-fill" style="width: 45%"></div>
-            </div>
+            <div id="healthValue" class="w-10 text-right font-bold">100</div>
           </div>
 
           <button id="gameDisconnect" class="disconnect-key px-3" type="button">
@@ -454,6 +446,8 @@
       const countdownDisconnectButton = document.querySelector("#countdownDisconnect");
       const countdownNumber = document.querySelector("#countdownNumber");
       const gameDisconnectButton = document.querySelector("#gameDisconnect");
+      const healthFill = document.querySelector("#healthFill");
+      const healthValue = document.querySelector("#healthValue");
       const fireButton = document.querySelector("#fire");
       const leftButton = document.querySelector("#left");
       const rightButton = document.querySelector("#right");
@@ -500,6 +494,7 @@
       bindTurnButton(leftButton, "left");
       bindTurnButton(rightButton, "right");
       window.addEventListener("resize", resetJoystick);
+      playerInput.addEventListener("change", renderState);
 
       function connect() {
         const url = new URL(serverUrl);
@@ -590,6 +585,7 @@
         const { p1, p2 } = gameState.players;
         p1StateText.textContent = formatPlayerState(p1);
         p2StateText.textContent = formatPlayerState(p2);
+        renderPlayerHealth();
 
         if (gameState.status === "COUNTDOWN") {
           matchStateText.textContent = `Starting in ${gameState.countdownSeconds}`;
@@ -627,6 +623,13 @@
         const ready = player.ready ? "Ready" : "Not ready";
         const tank = player.tankConnected ? "tank online" : "tank offline";
         return `${player.username}: ${connection}, ${ready}, ${tank}`;
+      }
+
+      function renderPlayerHealth() {
+        const health = gameState.players[playerInput.value]?.health ?? 0;
+        const healthPercent = Math.max(0, Math.min(100, health));
+        healthFill.style.width = `${healthPercent}%`;
+        healthValue.textContent = String(health);
       }
 
       function syncPlayerOptions() {
