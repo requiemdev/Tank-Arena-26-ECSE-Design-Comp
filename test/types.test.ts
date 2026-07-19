@@ -35,6 +35,8 @@ describe('parsePlayerInputs', () => {
           steering: -0.25,
           turret: 15,
           fire: true,
+          left: true,
+          right: false,
           seq: 42,
           ts: 1_800_000
         })
@@ -44,6 +46,8 @@ describe('parsePlayerInputs', () => {
         steering: -0.25,
         turret: 15,
         fire: true,
+        left: true,
+        right: false,
         seq: 42,
         ts: 1_800_000
       }
@@ -56,7 +60,7 @@ describe('parsePlayerInputs', () => {
         JSON.stringify({
           vector: {
             x: -0.4,
-            y: -0.8
+            y: 0.8
           },
           direction: {
             x: 'left',
@@ -69,6 +73,8 @@ describe('parsePlayerInputs', () => {
         throttle: 0.8,
         steering: -0.4,
         fire: undefined,
+        left: undefined,
+        right: undefined,
         seq: undefined,
         ts: undefined
       }
@@ -83,7 +89,7 @@ describe('parsePlayerInputs', () => {
           data: {
             vector: {
               x: 1.25,
-              y: 1.5
+              y: -1.5
             },
             direction: {
               x: 'right',
@@ -92,6 +98,8 @@ describe('parsePlayerInputs', () => {
             }
           },
           fire: true,
+          left: false,
+          right: true,
           seq: 7,
           ts: 1_800_001
         })
@@ -100,6 +108,8 @@ describe('parsePlayerInputs', () => {
         throttle: -1,
         steering: 1,
         fire: true,
+        left: false,
+        right: true,
         seq: 7,
         ts: 1_800_001
       }
@@ -111,6 +121,10 @@ describe('parsePlayerInputs', () => {
     assert.equal(parsePlayerInputs('null'), null);
     assert.equal(parsePlayerInputs(JSON.stringify({ throttle: 1 })), null);
     assert.equal(parsePlayerInputs(JSON.stringify({ throttle: '1', steering: 0 })), null);
+    assert.equal(
+      parsePlayerInputs(JSON.stringify({ throttle: 0, steering: 0, left: true, right: true })),
+      null
+    );
   });
 });
 
@@ -130,6 +144,7 @@ describe('publicGameState', () => {
           username: 'Ada',
           health: 100,
           score: 10,
+          ready: true,
           socket: tankSocket as WebSocket,
           controllerSocket: controllerSocket as WebSocket
         },
@@ -138,6 +153,7 @@ describe('publicGameState', () => {
           username: 'Grace',
           health: 80,
           score: 0,
+          ready: false,
           socket: null,
           controllerSocket: null
         }
@@ -148,8 +164,10 @@ describe('publicGameState', () => {
 
     assert.equal(publicState.players.p1.tankConnected, true);
     assert.equal(publicState.players.p1.controllerConnected, true);
+    assert.equal(publicState.players.p1.ready, true);
     assert.equal(publicState.players.p2.tankConnected, false);
     assert.equal(publicState.players.p2.controllerConnected, false);
+    assert.equal(publicState.players.p2.ready, false);
     assert.equal('socket' in publicState.players.p1, false);
     assert.equal('controllerSocket' in publicState.players.p1, false);
   });

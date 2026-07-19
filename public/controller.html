@@ -8,6 +8,29 @@
 
     <script src="https://cdn.jsdelivr.net/npm/nipplejs@0.10.2/dist/nipplejs.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
+<<<<<<< HEAD
+=======
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #29282f;
+        --shell: #403d46;
+        --bezel: #151922;
+        --key: #5e6b78;
+        --key-dark: #2d333d;
+        --text: #edf2f7;
+        --muted: #a9b3bd;
+        --cyan: #48d9e9;
+        --blue: #3da7ff;
+        --yellow: #efc733;
+        --red: #d92532;
+        --line: #10141b;
+        --stick-size: clamp(120px, min(42vw, 48dvh), 340px);
+        --button-size: clamp(70px, min(18vw, 22dvh), 112px);
+        --pregame-gap: clamp(6px, 1.5vw, 14px);
+        --pregame-control-height: clamp(38px, 7vw, 56px);
+      }
+>>>>>>> 74ee3e96f6f18309101462e6fb22878b0e17b674
 
     <style>
       * {
@@ -15,6 +38,7 @@
       }
 
       body {
+<<<<<<< HEAD
         margin: 0;
         overflow: hidden;
         touch-action: none;
@@ -62,9 +86,194 @@
         display: flex;
         align-items: flex-start;
         justify-content: flex-start;
-        position: relative;
+=======
+        min-height: 100dvh;
+        margin: 0;
+        background:
+          radial-gradient(circle at 14% 0%, rgba(255, 255, 255, 0.12), transparent 24rem),
+          var(--shell);
+        color: var(--text);
+        font-family:
+          ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+          monospace;
       }
 
+      .controller-shell {
+        min-height: 100dvh;
+        width: 100%;
+        max-width: none;
+        padding: clamp(14px, 3vw, 28px);
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 8rem),
+          var(--shell);
+        box-shadow: inset 0 0 0 2px #5a5660;
+      }
+
+      h1 {
+        color: var(--red);
+        font-size: 1rem;
+        letter-spacing: 0;
+        text-transform: uppercase;
+        text-shadow: 0 2px 0 var(--line);
+      }
+
+      label {
+        display: grid;
+        gap: 4px;
+        color: var(--muted);
+        font-size: 0.72rem;
+        text-transform: uppercase;
+      }
+
+      input,
+      select,
+      button,
+      .player-card,
+      .meter {
+        border: 2px solid var(--line);
+        border-radius: 6px;
+        box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.18), 0 4px 0 var(--line);
+      }
+
+      input,
+      select {
+        width: 100%;
+        min-height: 40px;
+        padding: 8px 14px 8px 16px;
+        background: var(--key);
+        color: var(--text);
+        outline: none;
+      }
+
+      input:focus,
+      select:focus,
+      button:focus-visible {
+        border-color: var(--yellow);
+      }
+
+      button {
+        min-height: 46px;
+        color: #10141b;
+        font-weight: 900;
+        text-transform: uppercase;
+        transition:
+          transform 120ms ease,
+          box-shadow 120ms ease,
+          filter 120ms ease;
+      }
+
+      button:active {
+        transform: translateY(3px);
+        box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.12), 0 1px 0 var(--line);
+      }
+
+      button:not(:disabled):hover {
+        filter: brightness(1.08);
+      }
+
+      .connect-key {
+        background: var(--cyan);
+      }
+
+      .ready-key {
+        background: var(--blue);
+      }
+
+      .action-key {
+        width: var(--button-size);
+        min-height: 0;
+        aspect-ratio: 1;
+        border-radius: 50%;
+        justify-self: center;
+        touch-action: none;
+        user-select: none;
+      }
+
+      .fire-key {
+        background: var(--red);
+        color: white;
+      }
+
+      .turn-key {
+        background: var(--yellow);
+      }
+
+      .disconnect-key {
+        background: var(--red);
+        color: white;
+      }
+
+      .setup {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+
+      .status {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--text);
+        font-size: 0.72rem;
+        white-space: nowrap;
+        padding: 7px 9px;
+        background: var(--bezel);
+        border: 2px solid var(--line);
+        border-radius: 999px;
+      }
+
+      .dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: var(--red);
+        box-shadow: 0 0 12px rgba(217, 37, 50, 0.85);
+      }
+
+      .dot.connected {
+        background: var(--cyan);
+        box-shadow: 0 0 12px rgba(72, 217, 233, 0.85);
+      }
+
+      .hidden {
+        display: none !important;
+      }
+
+      #joystick {
+        width: var(--stick-size);
+        aspect-ratio: 1;
+>>>>>>> 74ee3e96f6f18309101462e6fb22878b0e17b674
+        position: relative;
+        border-radius: 50%;
+        pointer-events: none;
+      }
+
+      .pad {
+        display: grid;
+        place-items: center;
+        min-height: var(--stick-size);
+        position: relative;
+        touch-action: none;
+        user-select: none;
+      }
+
+      .meter {
+        height: 10px;
+        overflow: hidden;
+        background: var(--bezel);
+      }
+
+      .meter-fill {
+        height: 100%;
+        border-radius: 0 999px 999px 0;
+        background: linear-gradient(90deg, var(--cyan), var(--blue));
+      }
+
+      .player-card {
+        background: var(--key-dark);
+      }
+
+<<<<<<< HEAD
       #fire {
         width: 50%;
 
@@ -89,6 +298,66 @@
         transform: scale(0.95);
         background: #b91c1c;
       }
+=======
+      .actions {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 14px;
+        justify-items: center;
+      }
+
+      #countdownScreen {
+        display: grid;
+        min-height: min(68dvh, 520px);
+        place-items: center;
+        text-align: center;
+      }
+
+      .countdown-number {
+        color: var(--yellow);
+        font-size: clamp(6rem, 32vw, 16rem);
+        line-height: 0.9;
+        text-shadow: 0 10px 0 var(--line);
+      }
+
+      #inGame > div {
+        min-height: min(68dvh, 520px);
+      }
+
+      .fire-key {
+        grid-column: 1 / -1;
+      }
+
+      button:disabled,
+      select:disabled,
+      input:disabled {
+        opacity: 0.55;
+      }
+
+      #preGame {
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr));
+        gap: var(--pregame-gap);
+        align-items: end;
+        font-size: clamp(0.68rem, 1.6vw, 0.78rem);
+      }
+
+      #preGame input,
+      #preGame select,
+      #preGame button {
+        min-height: var(--pregame-control-height);
+        padding: clamp(7px, 1.8vw, 12px) clamp(10px, 2.4vw, 18px);
+      }
+
+      #preGame > div {
+        grid-column: 1 / -1;
+        gap: var(--pregame-gap);
+      }
+
+      @media (min-width: 780px) {
+        .controller-shell {
+          padding: 24px;
+        }
+>>>>>>> 74ee3e96f6f18309101462e6fb22878b0e17b674
 
       .debug {
         height: 50px;
@@ -101,6 +370,7 @@
         color: white;
       }
 
+<<<<<<< HEAD
       .debug-box {
         background: rgba(255, 255, 255, 0.1);
         padding: 5px 15px;
@@ -114,12 +384,72 @@
         .controls {
           padding: 15px;
           gap: 15px;
+=======
+        #preGame {
+          grid-template-columns: minmax(10rem, 1fr) minmax(14rem, 1.4fr) minmax(16rem, 1fr);
+        }
+
+        #preGame > div {
+          grid-column: auto;
+>>>>>>> 74ee3e96f6f18309101462e6fb22878b0e17b674
+        }
+      }
+
+      @media (orientation: landscape) and (max-height: 520px) {
+        :root {
+          --stick-size: clamp(108px, min(34vw, 58dvh), 260px);
+          --button-size: clamp(62px, min(13vw, 24dvh), 104px);
+        }
+
+        .controller-shell {
+          min-height: 100dvh;
+          padding: 12px 18px;
+        }
+
+        .controller-shell > div:first-child {
+          margin-bottom: 8px;
+        }
+
+        #preGame {
+          grid-template-columns: minmax(8rem, 1fr) minmax(10rem, 1.25fr) minmax(11rem, 1fr);
+          align-items: end;
+        }
+
+        #preGame .grid {
+          grid-column: auto;
+        }
+
+        #inGame {
+          display: grid;
+          grid-template-columns: minmax(var(--stick-size), 1fr) minmax(calc(var(--button-size) * 2 + 14px), 1fr);
+          gap: 14px;
+          align-items: center;
+        }
+
+        #inGame > section {
+          grid-column: 1 / -1;
+          padding-bottom: 0;
+        }
+
+        #inGame > div {
+          display: contents;
+        }
+
+        #inGame .pad {
+          min-height: var(--stick-size);
+          width: 100%;
+        }
+
+        #inGame .actions {
+          align-content: center;
+          width: 100%;
         }
       }
     </style>
   </head>
 
   <body>
+<<<<<<< HEAD
     <!-- =====================
          PRE GAME
     ===================== -->
@@ -221,29 +551,140 @@
         </div>
       </div>
     </div>
+=======
+    <main class="controller-shell text-sm">
+      <div class="flex justify-between items-center">
+        <h1 class="font-bold">Tank Controller</h1>
+
+        <div class="status">
+          <span id="statusDot" class="dot"></span
+          ><span id="statusText">Disconnected</span>
+        </div>
+      </div>
+
+      <section id="preGame" class="text-xs grid gap-2 pt-2">
+        <label>
+          Player
+          <select id="player">
+            <option value="p1">Player 1</option>
+            <option value="p2">Player 2</option>
+          </select>
+        </label>
+        <label>
+          Name
+          <input id="username" autocomplete="name" value="Driver" />
+        </label>
+
+        <div class="grid grid-cols-2 gap-2 col-span-2">
+          <button id="connect" class="connect-key p-2" type="button">
+            Connect
+          </button>
+
+          <button id="ready" class="ready-key p-2" type="button">
+            Ready
+          </button>
+        </div>
+      </section>
+
+      <section id="countdownScreen" class="hidden pt-2">
+        <div>
+          <div id="countdownNumber" class="countdown-number font-bold">3</div>
+          <div class="font-bold">Get ready</div>
+          <button id="countdownDisconnect" class="disconnect-key px-3 mt-4" type="button">
+            Disconnect
+          </button>
+        </div>
+      </section>
+
+      <section id="inGame" class="hidden pt-2">
+        <section class="flex gap-4 text-center items-center pb-3">
+          <div class="flex items-center gap-2 w-full">
+            <div class="w-12">HP</div>
+            <div class="meter flex-1">
+              <div id="healthFill" class="meter-fill" style="width: 100%"></div>
+            </div>
+            <div id="healthValue" class="w-10 text-right font-bold">100</div>
+          </div>
+
+          <button id="gameDisconnect" class="disconnect-key px-3" type="button">
+            Disconnect
+          </button>
+        </section>
+
+        <div class="flex gap-4 items-center">
+          <div class="pad w-1/2" aria-label="Joystick">
+            <div id="joystick" class=""></div>
+          </div>
+
+          <div class="actions w-1/2">
+            <button id="fire" class="action-key fire-key p-2" type="button">
+              Fire
+            </button>
+            <button id="left" class="action-key turn-key p-2" type="button" aria-label="Rotate left">
+              Left
+            </button>
+            <button id="right" class="action-key turn-key p-2" type="button" aria-label="Rotate right">
+              Right
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <section class="lobby-info grid grid-cols-2 gap-2 pt-2" aria-live="polite">
+        <div id="p1Card" class="player-card p-2">
+          <div class="font-bold">Player 1</div>
+          <div id="p1State" class="text-xs" style="color: var(--muted)">Open</div>
+        </div>
+        <div id="p2Card" class="player-card p-2">
+          <div class="font-bold">Player 2</div>
+          <div id="p2State" class="text-xs" style="color: var(--muted)">Open</div>
+        </div>
+      </section>
+
+      <div id="matchState" class="lobby-info pt-2 font-bold" aria-live="polite">
+        Waiting for players
+      </div>
+    </main>
+>>>>>>> 74ee3e96f6f18309101462e6fb22878b0e17b674
 
     <script>
-      const serverUrlInput = document.querySelector("#serverUrl");
       const playerInput = document.querySelector("#player");
       const usernameInput = document.querySelector("#username");
       const statusDot = document.querySelector("#statusDot");
       const statusText = document.querySelector("#statusText");
-      const throttleText = document.querySelector("#throttle");
-      const steeringText = document.querySelector("#steering");
       const connectButton = document.querySelector("#connect");
-      const startButton = document.querySelector("#start");
+      const readyButton = document.querySelector("#ready");
+      const countdownDisconnectButton = document.querySelector("#countdownDisconnect");
+      const countdownNumber = document.querySelector("#countdownNumber");
+      const gameDisconnectButton = document.querySelector("#gameDisconnect");
+      const healthFill = document.querySelector("#healthFill");
+      const healthValue = document.querySelector("#healthValue");
       const fireButton = document.querySelector("#fire");
+<<<<<<< HEAD
       const pregame = document.querySelector("#pregame");
       const game = document.querySelector("#game");
+=======
+      const leftButton = document.querySelector("#left");
+      const rightButton = document.querySelector("#right");
+      const matchStateText = document.querySelector("#matchState");
+      const p1StateText = document.querySelector("#p1State");
+      const p2StateText = document.querySelector("#p2State");
+      const preGame = document.querySelector("#preGame");
+      const countdownScreen = document.querySelector("#countdownScreen");
+      const inGame = document.querySelector("#inGame");
+      const lobbyInfo = document.querySelectorAll(".lobby-info");
+      const joystickZone = document.querySelector(".pad");
+>>>>>>> 74ee3e96f6f18309101462e6fb22878b0e17b674
 
       const defaultProtocol =
         window.location.protocol === "https:" ? "wss:" : "ws:";
-      serverUrlInput.value = `${defaultProtocol}//${window.location.host}/connect`;
+      const serverUrl = `${defaultProtocol}//${window.location.host}/connect`;
 
       let socket;
       let seq = 0;
-      let latest = { throttle: 0, steering: 0, fire: false };
+      let latest = { throttle: 0, steering: 0, fire: false, left: false, right: false };
       let sendTimer;
+<<<<<<< HEAD
       let joystick;
 
       function initJoystick() {
@@ -270,6 +711,13 @@
 
         joystick.on("end", stopMoving);
       }
+=======
+      let stateTimer;
+      let gameState;
+      let joystick;
+      let fallbackJoystickReady = false;
+      const heldTurns = [];
+>>>>>>> 74ee3e96f6f18309101462e6fb22878b0e17b674
 
       connectButton.addEventListener("click", () => {
         if (socket?.readyState === WebSocket.OPEN) {
@@ -279,6 +727,7 @@
         connect();
       });
 
+<<<<<<< HEAD
       startButton.addEventListener("click", async () => {
         sendJson({ type: "start" });
 
@@ -296,20 +745,24 @@
       fireButton.addEventListener("pointerdown", () => {
         latest.fire = true;
         sendInput();
+=======
+      readyButton.addEventListener("click", () => {
+        const player = playerInput.value;
+        const nextReady = !gameState?.players?.[player]?.ready;
+        sendJson({ type: "ready", ready: nextReady });
+>>>>>>> 74ee3e96f6f18309101462e6fb22878b0e17b674
       });
 
-      fireButton.addEventListener("pointerup", () => {
-        latest.fire = false;
-        sendInput();
-      });
-
-      fireButton.addEventListener("pointercancel", () => {
-        latest.fire = false;
-        sendInput();
-      });
+      gameDisconnectButton.addEventListener("click", () => socket?.close());
+      countdownDisconnectButton.addEventListener("click", () => socket?.close());
+      bindHeldButton(fireButton, "fire");
+      bindTurnButton(leftButton, "left");
+      bindTurnButton(rightButton, "right");
+      window.addEventListener("resize", resetJoystick);
+      playerInput.addEventListener("change", renderState);
 
       function connect() {
-        const url = new URL(serverUrlInput.value);
+        const url = new URL(serverUrl);
         url.searchParams.set("type", "controller");
         url.searchParams.set("player", playerInput.value);
         url.searchParams.set("username", usernameInput.value || "Driver");
@@ -320,15 +773,40 @@
         socket.addEventListener("open", () => {
           setStatus("Connected", "bg-emerald-500");
           connectButton.textContent = "Disconnect";
+<<<<<<< HEAD
           connectButton.classList.replace("bg-blue-600", "bg-gray-600");
+=======
+          playerInput.disabled = true;
+          usernameInput.disabled = true;
+>>>>>>> 74ee3e96f6f18309101462e6fb22878b0e17b674
           sendTimer = window.setInterval(sendInput, 50);
+          requestState();
         });
 
         socket.addEventListener("close", () => {
           window.clearInterval(sendTimer);
           setStatus("Disconnected", "bg-red-500");
           connectButton.textContent = "Connect";
+<<<<<<< HEAD
           connectButton.classList.replace("bg-gray-600", "bg-blue-600");
+=======
+          playerInput.disabled = false;
+          usernameInput.disabled = false;
+          if (gameState?.status === "COUNTDOWN" || gameState?.status === "ACTIVE") {
+            gameState = { ...gameState, status: "ENDED", winner: null };
+            renderState();
+          }
+          updateControls();
+          requestState();
+        });
+
+        socket.addEventListener("message", (event) => {
+          const message = parseJson(event.data);
+          if (message?.type === "state") {
+            gameState = message.state;
+            renderState();
+          }
+>>>>>>> 74ee3e96f6f18309101462e6fb22878b0e17b674
         });
 
         socket.addEventListener("error", () =>
@@ -350,6 +828,8 @@
           throttle: latest.throttle,
           steering: latest.steering,
           fire: latest.fire,
+          left: latest.left,
+          right: latest.right,
           seq: ++seq,
           ts: Date.now(),
         });
@@ -361,9 +841,261 @@
         }
       }
 
+<<<<<<< HEAD
+=======
+      async function requestState() {
+        sendJson({ type: "state" });
+
+        try {
+          const url = new URL(serverUrl);
+          url.protocol = url.protocol === "wss:" ? "https:" : "http:";
+          url.pathname = "/state";
+          url.search = "";
+          const response = await fetch(url);
+          if (response.ok) {
+            gameState = await response.json();
+            renderState();
+          }
+        } catch {
+          // The WebSocket state push remains the primary update path.
+        }
+      }
+
+      function renderState() {
+        if (!gameState) {
+          return;
+        }
+
+        const { p1, p2 } = gameState.players;
+        p1StateText.textContent = formatPlayerState(p1);
+        p2StateText.textContent = formatPlayerState(p2);
+        renderPlayerHealth();
+
+        if (gameState.status === "COUNTDOWN") {
+          matchStateText.textContent = `Starting in ${gameState.countdownSeconds}`;
+          countdownNumber.textContent = gameState.countdownSeconds;
+        } else if (gameState.status === "ACTIVE") {
+          matchStateText.textContent = `Match active: ${gameState.remainingSeconds}s left`;
+        } else if (gameState.status === "ENDED") {
+          matchStateText.textContent = gameState.winner
+            ? `${gameState.players[gameState.winner].username} wins`
+            : "Match ended in a draw";
+        } else {
+          matchStateText.textContent = bothReady()
+            ? "Both players ready"
+            : "Waiting for both players to ready up";
+        }
+
+        const isCountdown = gameState.status === "COUNTDOWN";
+        const isActive = gameState.status === "ACTIVE";
+        const inMatch = isCountdown || isActive;
+        preGame.classList.toggle("hidden", inMatch);
+        countdownScreen.classList.toggle("hidden", !isCountdown);
+        inGame.classList.toggle("hidden", !isActive);
+        lobbyInfo.forEach((element) => element.classList.toggle("hidden", inMatch));
+        if (isActive) {
+          window.requestAnimationFrame(setupJoystick);
+        } else {
+          teardownJoystick();
+        }
+        syncPlayerOptions();
+        updateControls();
+      }
+
+      function formatPlayerState(player) {
+        const connection = player.controllerConnected ? "Locked" : "Open";
+        const ready = player.ready ? "Ready" : "Not ready";
+        const tank = player.tankConnected ? "tank online" : "tank offline";
+        return `${player.username}: ${connection}, ${ready}, ${tank}`;
+      }
+
+      function renderPlayerHealth() {
+        const health = gameState.players[playerInput.value]?.health ?? 0;
+        const healthPercent = Math.max(0, Math.min(100, health));
+        healthFill.style.width = `${healthPercent}%`;
+        healthValue.textContent = String(health);
+      }
+
+      function syncPlayerOptions() {
+        for (const option of playerInput.options) {
+          const player = gameState.players[option.value];
+          option.disabled = false;
+          option.textContent = `${option.value === "p1" ? "Player 1" : "Player 2"}${
+            player.controllerConnected ? " (locked)" : ""
+          }`;
+        }
+      }
+
+      function updateControls() {
+        const connected = socket?.readyState === WebSocket.OPEN;
+        const player = gameState?.players?.[playerInput.value];
+        const ready = Boolean(player?.ready);
+        const lobbyStatus = !gameState || gameState.status === "LOBBY" || gameState.status === "ENDED";
+        const selectedSlotLocked = Boolean(!connected && player?.controllerConnected);
+
+        connectButton.disabled = selectedSlotLocked;
+        readyButton.disabled = !connected || !lobbyStatus;
+        readyButton.textContent = ready ? "Unready" : "Ready";
+        countdownDisconnectButton.disabled = !connected;
+        gameDisconnectButton.disabled = !connected;
+        fireButton.disabled = !connected || gameState?.status !== "ACTIVE";
+        leftButton.disabled = fireButton.disabled;
+        rightButton.disabled = fireButton.disabled;
+        if (fireButton.disabled) {
+          heldTurns.length = 0;
+          latest.fire = false;
+          latest.left = false;
+          latest.right = false;
+        }
+      }
+
+      function bindHeldButton(button, control) {
+        button.addEventListener("pointerdown", (event) => {
+          button.setPointerCapture(event.pointerId);
+          latest[control] = true;
+          sendInput();
+        });
+
+        const release = () => {
+          if (latest[control]) {
+            latest[control] = false;
+            sendInput();
+          }
+        };
+        button.addEventListener("pointerup", release);
+        button.addEventListener("pointercancel", release);
+        button.addEventListener("lostpointercapture", release);
+      }
+
+      function bindTurnButton(button, direction) {
+        button.addEventListener("pointerdown", (event) => {
+          button.setPointerCapture(event.pointerId);
+          const previousIndex = heldTurns.indexOf(direction);
+          if (previousIndex !== -1) {
+            heldTurns.splice(previousIndex, 1);
+          }
+          heldTurns.push(direction);
+          syncHeldTurn();
+        });
+
+        const release = () => {
+          const index = heldTurns.indexOf(direction);
+          if (index !== -1) {
+            heldTurns.splice(index, 1);
+            syncHeldTurn();
+          }
+        };
+        button.addEventListener("pointerup", release);
+        button.addEventListener("pointercancel", release);
+        button.addEventListener("lostpointercapture", release);
+      }
+
+      function syncHeldTurn() {
+        const activeTurn = heldTurns[heldTurns.length - 1];
+        latest.left = activeTurn === "left";
+        latest.right = activeTurn === "right";
+        sendInput();
+      }
+
+      function bothReady() {
+        return Boolean(
+          gameState?.players?.p1?.controllerConnected &&
+            gameState?.players?.p2?.controllerConnected &&
+            gameState?.players?.p1?.ready &&
+            gameState?.players?.p2?.ready,
+        );
+      }
+
+      function parseJson(value) {
+        try {
+          return JSON.parse(value);
+        } catch {
+          return null;
+        }
+      }
+
+      function setupJoystick() {
+        if (joystick || fallbackJoystickReady) {
+          return;
+        }
+
+        const rect = joystickZone.getBoundingClientRect();
+        if (!rect.width || !rect.height) {
+          return;
+        }
+
+        if (!window.nipplejs) {
+          setupFallbackJoystick();
+          return;
+        }
+
+        const size = Math.min(rect.width, rect.height) * 0.72;
+        joystick = nipplejs.create({
+          zone: joystickZone,
+          mode: "static",
+          position: { left: `${rect.width / 2}px`, top: `${rect.height / 2}px` },
+          size,
+        });
+
+        joystick.on("move", (_event, data) => {
+          latest = {
+            ...latest,
+            throttle: clamp(data.vector?.y ?? 0),
+            steering: clamp(data.vector?.x ?? 0),
+          };
+        });
+
+        joystick.on("end", stopMoving);
+      }
+
+      function resetJoystick() {
+        if (!joystick) {
+          return;
+        }
+
+        joystick.destroy();
+        joystick = null;
+        window.requestAnimationFrame(setupJoystick);
+      }
+
+      function setupFallbackJoystick() {
+        fallbackJoystickReady = true;
+        joystickZone.addEventListener("pointerdown", handleFallbackPointer);
+        joystickZone.addEventListener("pointermove", handleFallbackPointer);
+        joystickZone.addEventListener("pointerup", stopMoving);
+        joystickZone.addEventListener("pointercancel", stopMoving);
+      }
+
+      function teardownJoystick() {
+        if (joystick) {
+          joystick.destroy();
+          joystick = null;
+        }
+
+        if (latest.throttle !== 0 || latest.steering !== 0) {
+          stopMoving();
+        }
+      }
+
+      function handleFallbackPointer(event) {
+        if (event.type === "pointermove" && event.buttons === 0) {
+          return;
+        }
+
+        const rect = joystickZone.getBoundingClientRect();
+        const radius = Math.min(rect.width, rect.height) / 2;
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+        latest = {
+          ...latest,
+          throttle: clamp((centerY - event.clientY) / radius),
+          steering: clamp((event.clientX - centerX) / radius),
+        };
+      }
+
+>>>>>>> 74ee3e96f6f18309101462e6fb22878b0e17b674
       function stopMoving() {
         latest = { ...latest, throttle: 0, steering: 0 };
-        renderAxes();
         sendInput();
       }
 
@@ -372,15 +1104,11 @@
         statusDot.className = `w-3 h-3 rounded-full transition-colors duration-300 ${dotColorClass}`;
       }
 
-      function renderAxes() {
-        throttleText.textContent = latest.throttle.toFixed(2);
-        steeringText.textContent = latest.steering.toFixed(2);
-      }
-
       function clamp(value) {
         return Math.max(-1, Math.min(1, value));
       }
 
+<<<<<<< HEAD
       async function enterLandscape() {
         try {
           if (screen.orientation) {
@@ -390,6 +1118,11 @@
           console.log("Orientation lock unavailable", error);
         }
       }
+=======
+      stateTimer = window.setInterval(requestState, 1000);
+      requestState();
+      updateControls();
+>>>>>>> 74ee3e96f6f18309101462e6fb22878b0e17b674
     </script>
   </body>
 </html>

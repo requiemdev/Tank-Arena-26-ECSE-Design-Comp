@@ -53,20 +53,33 @@ export class GameEngine {
     return this.state;
   }
 
-  attachTank(player: PlayerSlot, socket: WebSocket, username?: string): void {
+  attachTank(player: PlayerSlot, socket: WebSocket, username?: string): boolean {
+    const existingSocket = this.state.players[player].socket;
+    if (existingSocket && existingSocket.readyState === WebSocket.OPEN) {
+      return false;
+    }
+
     this.state.players[player].socket = socket;
     if (username) {
       this.state.players[player].username = username;
     }
     this.broadcastState();
+    return true;
   }
 
-  attachController(player: PlayerSlot, socket: WebSocket, username?: string): void {
+  attachController(player: PlayerSlot, socket: WebSocket, username?: string): boolean {
+    const existingSocket = this.state.players[player].controllerSocket;
+    if (existingSocket && existingSocket.readyState === WebSocket.OPEN) {
+      return false;
+    }
+
     this.state.players[player].controllerSocket = socket;
+    this.state.players[player].ready = false;
     if (username) {
       this.state.players[player].username = username;
     }
     this.broadcastState();
+    return true;
   }
 
   disconnectTank(player: PlayerSlot, socket?: WebSocket): void {
@@ -75,7 +88,7 @@ export class GameEngine {
     }
 
     this.state.players[player].socket = null;
-    this.stopActiveMatchForSafety(`${player} tank disconnected`);
+    this.stopMatchForSafety(`${player} tank disconnected`);
     this.broadcastState();
   }
 
@@ -85,7 +98,8 @@ export class GameEngine {
     }
 
     this.state.players[player].controllerSocket = null;
-    this.stopActiveMatchForSafety(`${player} controller disconnected`);
+    this.state.players[player].ready = false;
+    this.stopMatchForSafety(`${player} controller disconnected`);
     this.broadcastState();
   }
 
@@ -110,6 +124,10 @@ export class GameEngine {
       this.resetEngine();
     }
 
+    if (!this.canStartMatch()) {
+      return false;
+    }
+
     this.clearTimers();
     this.state.status = 'COUNTDOWN';
     this.state.countdownSeconds = DEFAULT_COUNTDOWN_SECONDS;
@@ -126,6 +144,29 @@ export class GameEngine {
       this.broadcastState();
     }, 1000);
 
+    return true;
+  }
+
+  setPlayerReady(player: PlayerSlot, ready: boolean): boolean {
+    if (this.state.status !== 'LOBBY' && this.state.status !== 'ENDED') {
+      return false;
+    }
+
+    if (this.state.status === 'ENDED') {
+      this.resetEngine();
+    }
+
+    if (!this.state.players[player].controllerSocket) {
+      return false;
+    }
+
+    this.state.players[player].ready = ready;
+    if (this.canStartMatch()) {
+      this.startCountdown();
+      return true;
+    }
+
+    this.broadcastState();
     return true;
   }
 
@@ -197,16 +238,28 @@ export class GameEngine {
     this.clearTimers();
     this.state.status = 'ENDED';
     this.state.winner = winner;
+    this.state.players.p1.ready = false;
+    this.state.players.p2.ready = false;
     this.broadcastState();
     this.queueResult();
   }
 
-  private stopActiveMatchForSafety(reason: string): void {
-    if (this.state.status !== 'ACTIVE') {
+  private stopMatchForSafety(reason: string): void {
+    if (this.state.status !== 'ACTIVE' && this.state.status !== 'COUNTDOWN') {
       return;
     }
 
-    console.warn(`Force-stopping active match: ${reason}`);
+    console.warn(`Force-stopping match: ${reason}`);
+    if (this.state.status === 'COUNTDOWN') {
+      this.clearTimers();
+      this.state.status = 'ENDED';
+      this.state.winner = null;
+      this.state.players.p1.ready = false;
+      this.state.players.p2.ready = false;
+      this.broadcastState();
+      return;
+    }
+
     this.endMatch(this.determineWinnerByScore());
   }
 
@@ -244,6 +297,10 @@ export class GameEngine {
       state: this.getPublicState()
     });
 
+    for (const socket of this.getControllerSockets()) {
+      this.sendJson(socket, message);
+    }
+
     for (const socket of this.spectators) {
       if (socket.readyState === WebSocket.OPEN) {
         socket.send(message);
@@ -256,8 +313,20 @@ export class GameEngine {
 
   private sendJson(socket: WebSocket, payload: unknown): void {
     if (socket.readyState === WebSocket.OPEN) {
-      socket.send(JSON.stringify(payload));
+      socket.send(typeof payload === 'string' ? payload : JSON.stringify(payload));
     }
+  }
+
+  private getControllerSockets(): WebSocket[] {
+    return Object.values(this.state.players)
+      .map((player) => player.controllerSocket)
+      .filter((socket): socket is WebSocket => Boolean(socket));
+  }
+
+  private canStartMatch(): boolean {
+    return Object.values(this.state.players).every(
+      (player) => player.controllerSocket !== null && player.ready
+    );
   }
 
   private determineWinnerByScore(): PlayerSlot | null {
@@ -302,6 +371,7 @@ export class GameEngine {
           username: 'Player 1',
           health: STARTING_HEALTH,
           score: 0,
+          ready: false,
           socket: null,
           controllerSocket: null
         },
@@ -310,6 +380,7 @@ export class GameEngine {
           username: 'Player 2',
           health: STARTING_HEALTH,
           score: 0,
+          ready: false,
           socket: null,
           controllerSocket: null
         }

@@ -8,8 +8,8 @@
     "node": ">=20"
   },
   "scripts": {
-    "dev": "tsx src/server.ts",
-    "robot": "tsx src/robotClient.ts",
+    "dev": "node --env-file=.env --import tsx src/server.ts",
+    "robot": "node --env-file=.env --import tsx src/robotClient.ts",
     "build": "tsc --noEmit",
     "test": "node --import tsx --test test/**/*.test.ts",
     "typecheck": "tsc --noEmit"

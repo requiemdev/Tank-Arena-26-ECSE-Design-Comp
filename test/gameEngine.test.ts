@@ -39,6 +39,7 @@ describe('GameEngine', () => {
           username: 'Player 1',
           health: 100,
           score: 0,
+          ready: false,
           controllerConnected: false,
           tankConnected: false
         },
@@ -47,6 +48,7 @@ describe('GameEngine', () => {
           username: 'Player 2',
           health: 100,
           score: 0,
+          ready: false,
           controllerConnected: false,
           tankConnected: false
         }
@@ -58,7 +60,13 @@ describe('GameEngine', () => {
     const engine = new GameEngine();
     const p1Tank = createOpenSocket();
     const p2Tank = createOpenSocket();
-    const payload = JSON.stringify({ throttle: 1, steering: -0.5, fire: true });
+    const payload = JSON.stringify({
+      throttle: 1,
+      steering: -0.5,
+      fire: true,
+      left: true,
+      right: false
+    });
 
     engine.attachTank('p1', p1Tank);
     engine.attachTank('p2', p2Tank);
@@ -84,7 +92,7 @@ describe('GameEngine', () => {
       data: {
         vector: {
           x: 0.3,
-          y: -0.75
+          y: 0.75
         },
         direction: {
           x: 'right',
@@ -113,6 +121,8 @@ describe('GameEngine', () => {
     state.status = 'ACTIVE';
     state.players.p1.username = 'Ada';
     state.players.p2.username = 'Grace';
+    state.players.p1.ready = true;
+    state.players.p2.ready = true;
 
     for (let hit = 0; hit < 10; hit += 1) {
       engine.registerHit('p2');
@@ -122,6 +132,8 @@ describe('GameEngine', () => {
     assert.equal(engine.getState().winner, 'p1');
     assert.equal(engine.getState().players.p2.health, 0);
     assert.equal(engine.getState().players.p1.score, 100);
+    assert.equal(engine.getState().players.p1.ready, false);
+    assert.equal(engine.getState().players.p2.ready, false);
     assert.equal(results.length, 1);
     assert.deepEqual(
       {
@@ -167,7 +179,62 @@ describe('GameEngine', () => {
     assert.equal(publicState.players.p1.username, 'Ada');
     assert.equal(publicState.players.p1.score, 0);
     assert.equal(publicState.players.p1.health, 100);
+    assert.equal(publicState.players.p1.ready, false);
     assert.equal(publicState.players.p1.tankConnected, true);
     assert.equal(publicState.players.p1.controllerConnected, true);
+  });
+
+  it('automatically starts countdown once both connected controllers are ready', () => {
+    const engine = new GameEngine();
+    const p1Controller = createOpenSocket();
+    const p2Controller = createOpenSocket();
+
+    assert.equal(engine.startCountdown(), false);
+
+    assert.equal(engine.attachController('p1', p1Controller), true);
+    assert.equal(engine.setPlayerReady('p1', true), true);
+    assert.equal(engine.startCountdown(), false);
+
+    assert.equal(engine.attachController('p2', p2Controller), true);
+    assert.equal(engine.setPlayerReady('p2', true), true);
+    assert.equal(engine.getPublicState().status, 'COUNTDOWN');
+
+    engine.resetEngine();
+  });
+
+  it('ends countdown without queuing a result when a controller disconnects', () => {
+    const results: MatchResult[] = [];
+    const engine = new GameEngine((result) => {
+      results.push(result);
+    });
+    const p1Controller = createOpenSocket();
+    const p2Controller = createOpenSocket();
+
+    engine.attachController('p1', p1Controller);
+    engine.attachController('p2', p2Controller);
+    engine.setPlayerReady('p1', true);
+    engine.setPlayerReady('p2', true);
+
+    assert.equal(engine.getPublicState().status, 'COUNTDOWN');
+
+    engine.disconnectController('p1', p1Controller);
+
+    const publicState = engine.getPublicState();
+    assert.equal(publicState.status, 'ENDED');
+    assert.equal(publicState.winner, null);
+    assert.equal(publicState.players.p1.controllerConnected, false);
+    assert.equal(publicState.players.p1.ready, false);
+    assert.equal(publicState.players.p2.controllerConnected, true);
+    assert.equal(publicState.players.p2.ready, false);
+    assert.equal(results.length, 0);
+  });
+
+  it('rejects duplicate live controllers and tanks for a player slot', () => {
+    const engine = new GameEngine();
+
+    assert.equal(engine.attachController('p1', createOpenSocket()), true);
+    assert.equal(engine.attachController('p1', createOpenSocket()), false);
+    assert.equal(engine.attachTank('p1', createOpenSocket()), true);
+    assert.equal(engine.attachTank('p1', createOpenSocket()), false);
   });
 });

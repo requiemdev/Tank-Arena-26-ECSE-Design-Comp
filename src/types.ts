@@ -9,6 +9,7 @@ export interface PlayerState {
   username: string;
   health: number;
   score: number;
+  ready: boolean;
   socket: WebSocket | null;
   controllerSocket: WebSocket | null;
 }
@@ -30,6 +31,8 @@ export interface PlayerInputs {
   steering: number;
   turret?: number;
   fire?: boolean;
+  left?: boolean;
+  right?: boolean;
   seq?: number;
   ts?: number;
 }
@@ -62,6 +65,10 @@ export function parsePlayerInputs(payload: string): PlayerInputs | null {
     }
 
     const input = data as Record<string, unknown>;
+    if (input.left === true && input.right === true) {
+      return null;
+    }
+
     if (typeof input.throttle !== 'number' || typeof input.steering !== 'number') {
       return parseNippleInputs(input);
     }
@@ -71,6 +78,8 @@ export function parsePlayerInputs(payload: string): PlayerInputs | null {
       steering: clampAxis(input.steering),
       turret: typeof input.turret === 'number' ? input.turret : undefined,
       fire: typeof input.fire === 'boolean' ? input.fire : undefined,
+      left: typeof input.left === 'boolean' ? input.left : undefined,
+      right: typeof input.right === 'boolean' ? input.right : undefined,
       seq: typeof input.seq === 'number' ? input.seq : undefined,
       ts: typeof input.ts === 'number' ? input.ts : undefined
     };
@@ -89,9 +98,11 @@ function parseNippleInputs(input: Record<string, unknown>): PlayerInputs | null 
   }
 
   return {
-    throttle: clampAxis(-vector.y),
+    throttle: clampAxis(vector.y),
     steering: clampAxis(vector.x),
     fire: typeof input.fire === 'boolean' ? input.fire : undefined,
+    left: typeof input.left === 'boolean' ? input.left : undefined,
+    right: typeof input.right === 'boolean' ? input.right : undefined,
     seq: typeof input.seq === 'number' ? input.seq : undefined,
     ts: typeof input.ts === 'number' ? input.ts : undefined
   };
@@ -126,6 +137,7 @@ export function publicGameState(state: GameState): Omit<GameState, 'players'> & 
         username: state.players.p1.username,
         health: state.players.p1.health,
         score: state.players.p1.score,
+        ready: state.players.p1.ready,
         controllerConnected: state.players.p1.controllerSocket !== null,
         tankConnected: state.players.p1.socket !== null
       },
@@ -134,6 +146,7 @@ export function publicGameState(state: GameState): Omit<GameState, 'players'> & 
         username: state.players.p2.username,
         health: state.players.p2.health,
         score: state.players.p2.score,
+        ready: state.players.p2.ready,
         controllerConnected: state.players.p2.controllerSocket !== null,
         tankConnected: state.players.p2.socket !== null
       }

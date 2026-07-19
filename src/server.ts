@@ -7,6 +7,7 @@ import { isClientType, isPlayerSlot, type PlayerSlot } from './types.js';
 const PORT = Number(process.env.PORT ?? 8080);
 const HOST = '0.0.0.0';
 const CONTROLLER_HTML_URL = new URL('../public/controller.html', import.meta.url);
+const LEADERBOARD_HTML_URL = new URL('../public/leaderboard.html', import.meta.url);
 
 export interface EdgeServerOptions {
   gameEngine?: GameEngine;
@@ -15,7 +16,7 @@ export interface EdgeServerOptions {
 
 export function buildServer(options: EdgeServerOptions = {}) {
   const app = Fastify({
-    logger: options.logger ?? true 
+    logger: options.logger ?? false
   });
   const gameEngine = options.gameEngine ?? new GameEngine();
   const wss = new WebSocketServer({
@@ -37,6 +38,42 @@ export function buildServer(options: EdgeServerOptions = {}) {
 
   app.get('/state', async () => gameEngine.getPublicState());
 
+  app.get('/leaderboard', async (_request, reply) => {
+    const html = await readFile(LEADERBOARD_HTML_URL, 'utf8');
+
+    return reply
+        .type('text/html; charset=utf-8')
+        .send(html);
+});
+
+  app.get('/api/leaderboard', async () => {
+
+    const { createClient } = await import('@supabase/supabase-js');
+
+    const supabase = createClient(
+        process.env.SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+
+
+    const { data, error } = await supabase
+        .from('leaderboard')
+        .select('*')
+        .order('created_at', {
+            ascending:false
+        })
+        .limit(50);
+
+
+    if(error){
+        throw error;
+    }
+
+
+    return data;
+
+});
+
   app.post('/start', async (_request, reply) => {
     const started = gameEngine.startCountdown();
     return reply.code(started ? 202 : 409).send({ //202 accepted, 409 conflict
@@ -50,18 +87,6 @@ export function buildServer(options: EdgeServerOptions = {}) {
     return {
       state: gameEngine.getPublicState()
     };
-  });
-
-  app.post<{ Params: { player: string } }>('/hit/:player', async (request, reply) => {
-    const { player } = request.params;
-    if (!isPlayerSlot(player)) {
-      return reply.code(400).send({ error: 'player must be p1 or p2' });
-    }
-
-    gameEngine.registerHit(player);
-    return reply.code(202).send({
-      state: gameEngine.getPublicState()
-    });
   });
 
   wss.on('connection', (socket, request) => {
@@ -103,11 +128,16 @@ export function buildServer(options: EdgeServerOptions = {}) {
 }
 
 function routeController(gameEngine: GameEngine, socket: WebSocket, player: PlayerSlot, username?: string): void {
-  gameEngine.attachController(player, socket, username);
+  if (!gameEngine.attachController(player, socket, username)) {
+    socket.close(1008, `${player} controller is already connected`);
+    return;
+  }
+
+  console.info(`${player} controller connected${username ? ` as ${username}` : ''}`);
 
   socket.on('message', (data) => {
     const payload = rawDataToString(data);
-    if (handleControlMessage(gameEngine, payload, player)) {
+    if (handleControlMessage(gameEngine, payload, player, socket)) {
       return;
     }
 
@@ -125,11 +155,16 @@ function routeController(gameEngine: GameEngine, socket: WebSocket, player: Play
 }
 
 function routeTank(gameEngine: GameEngine, socket: WebSocket, player: PlayerSlot, username?: string): void {
-  gameEngine.attachTank(player, socket, username);
+  if (!gameEngine.attachTank(player, socket, username)) {
+    socket.close(1008, `${player} tank is already connected`);
+    return;
+  }
+
+  console.info(`${player} tank connected${username ? ` as ${username}` : ''}`);
 
   socket.on('message', (data) => {
     const payload = rawDataToString(data);
-    if (!handleControlMessage(gameEngine, payload, player)) {
+    if (!handleControlMessage(gameEngine, payload, player, socket)) {
       socket.send(JSON.stringify({ type: 'ack', source: 'tank', received: true }));
     }
   });
@@ -148,7 +183,7 @@ function routeSpectator(gameEngine: GameEngine, socket: WebSocket): void {
   gameEngine.addSpectator(socket);
 
   socket.on('message', (data) => {
-    handleControlMessage(gameEngine, rawDataToString(data));
+    handleControlMessage(gameEngine, rawDataToString(data), undefined, socket);
   });
 
   socket.on('close', () => {
@@ -160,7 +195,12 @@ function routeSpectator(gameEngine: GameEngine, socket: WebSocket): void {
   });
 }
 
-function handleControlMessage(gameEngine: GameEngine, payload: string, defaultPlayer?: PlayerSlot): boolean {
+function handleControlMessage(
+  gameEngine: GameEngine,
+  payload: string,
+  defaultPlayer?: PlayerSlot,
+  socket?: WebSocket
+): boolean {
   const message = parseControlMessage(payload);
   if (!message) {
     return false;
@@ -173,6 +213,11 @@ function handleControlMessage(gameEngine: GameEngine, payload: string, defaultPl
     case 'reset':
       gameEngine.resetEngine();
       return true;
+    case 'ready':
+      if (defaultPlayer) {
+        gameEngine.setPlayerReady(defaultPlayer, message.ready);
+      }
+      return true;
     case 'hit': {
       const target = message.target ?? defaultPlayer;
       if (!target) {
@@ -182,6 +227,9 @@ function handleControlMessage(gameEngine: GameEngine, payload: string, defaultPl
       return true;
     }
     case 'state':
+      if (socket?.readyState === WebSocket.OPEN) {
+        socket.send(JSON.stringify({ type: 'state', state: gameEngine.getPublicState() }));
+      }
       return true;
   }
 }
@@ -189,8 +237,9 @@ function handleControlMessage(gameEngine: GameEngine, payload: string, defaultPl
 function parseControlMessage(payload: string):
   | { type: 'start' }
   | { type: 'reset' }
+  | { type: 'ready'; ready: boolean }
   | { type: 'state' }
-  | { type: 'hit'; target?: PlayerSlot }
+  | { type: 'hit'; target?: PlayerSlot; direction?: string }
   | null {
   try {
     const data: unknown = JSON.parse(payload);
@@ -203,9 +252,14 @@ function parseControlMessage(payload: string):
       return { type: record.type };
     }
 
+    if (record.type === 'ready') {
+      return { type: 'ready', ready: record.ready !== false };
+    }
+
     if (record.type === 'hit') {
       const target = isPlayerSlot(record.target) ? record.target : undefined;
-      return { type: 'hit', target };
+      const direction = typeof record.direction === 'string' ? record.direction : undefined;
+      return { type: 'hit', target, direction };
     }
 
     return null;
@@ -267,6 +321,12 @@ export async function startServer(): Promise<void> {
   }
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+import { pathToFileURL } from 'node:url';
+
+if(import.meta.url === pathToFileURL(process.argv[1]).href){
   await startServer();
 }
+
+// if (import.meta.url === `file://${process.argv[1]}`) {
+//   await startServer();
+// }
