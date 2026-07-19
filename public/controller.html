@@ -3,156 +3,223 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+
     <title>ECSE Tank Controller</title>
+
     <script src="https://cdn.jsdelivr.net/npm/nipplejs@0.10.2/dist/nipplejs.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-      :root {
-        color-scheme: dark;
-        --bg: #101419;
-        --panel: #1b242d;
-        --panel-2: #24313c;
-        --text: #f5f7fa;
-        --muted: #a9b5bf;
-        --accent: #34c759;
-        --danger: #ff453a;
-        --line: #34424f;
-      }
 
+    <style>
       * {
         box-sizing: border-box;
       }
 
-      .setup {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 10px;
+      body {
+        margin: 0;
+        overflow: hidden;
+        touch-action: none;
+        background: #e5e7eb;
+        font-family: Arial, Helvetica, sans-serif;
       }
 
-      .setup label:first-child {
-        grid-column: 1 / -1;
-      }
-
-      .status {
-        display: inline-flex;
+      /* ---------- PRE GAME ---------- */
+      #pregame {
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
         align-items: center;
-        gap: 8px;
-        color: var(--muted);
-        font-size: 0.9rem;
-        white-space: nowrap;
       }
 
-      .dot {
-        width: 10px;
-        height: 10px;
-        border-radius: 50%;
-        background: var(--danger);
+      /* ---------- GAME ---------- */
+      #game {
+        width: 100vw;
+        height: 100dvh;
+        overflow: hidden;
+        background: #1f2937;
       }
 
-      .dot.connected {
-        background: var(--accent);
+      .controller {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .controls {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+        padding: 25px;
+        gap: 40px;
       }
 
       #joystick {
-        width: 25vw;
-        aspect-ratio: 1;
+        width: 50%;
+        height: 100%;
+        display: flex;
+        align-items: flex-start;
+        justify-content: flex-start;
         position: relative;
       }
 
-      .actions {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 10px;
+      #fire {
+        width: 50%;
+
+        height: 85%;
+
+        border-radius: 30px;
+
+        font-size: 32px;
+
+        font-weight: bold;
+
+        color: white;
+
+        background: #dc2626;
+
+        border: 4px solid #991b1b;
+
+        box-shadow: 0 8px 15px rgba(0, 0, 0, 0.3);
       }
 
-      @media (min-width: 780px) {
-        main {
-          max-width: 860px;
-          margin: 0 auto;
-          padding: 24px;
-        }
+      #fire:active {
+        transform: scale(0.95);
+        background: #b91c1c;
+      }
 
-        .setup {
-          grid-template-columns: 2fr 1fr 1fr;
-        }
+      .debug {
+        height: 50px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 25px;
+        font-size: 16px;
+        background: rgba(0, 0, 0, 0.4);
+        color: white;
+      }
 
-        .setup label:first-child {
-          grid-column: auto;
+      .debug-box {
+        background: rgba(255, 255, 255, 0.1);
+        padding: 5px 15px;
+        border-radius: 9999px;
+      }
+
+      @media (max-width: 700px) {
+        #fire {
+          font-size: 22px;
+        }
+        .controls {
+          padding: 15px;
+          gap: 15px;
         }
       }
     </style>
   </head>
+
   <body>
-    <div class="p-2 text-sm">
-      <div class="flex justify-between items-center">
-        <h1 class="font-bold">Tank Controller</h1>
-
-        <div class="status h-2">
-          <span id="statusDot" class="dot"></span
-          ><span id="statusText">Disconnected</span>
-        </div>
-      </div>
-
-      <div class="text-xs flex gap-5 pt-2">
-        <label>
-          Edge server
-          <input id="serverUrl" autocomplete="off" />
-        </label>
-        <label>
-          Player
-          <select id="player">
-            <option value="p1">Player 1</option>
-            <option value="p2">Player 2</option>
-          </select>
-        </label>
-        <label>
-          Name
-          <input id="username" autocomplete="name" value="Driver" />
-        </label>
-      </div>
-
-      <div class="flex gap-4 text-center items-center pt-2">
-        <div class="flex items-center gap-2 w-full">
-          <div class="w-12">HP</div>
-          <div class="flex-1 bg-gray-300 rounded-full h-2">
-            <div class="bg-blue-500 h-2 rounded-full" style="width: 45%"></div>
+    <!-- =====================
+         PRE GAME
+    ===================== -->
+    <div id="pregame">
+      <div
+        class="bg-white w-[90vw] max-w-[450px] p-6 rounded-2xl shadow-xl border border-gray-200"
+      >
+        <div class="flex justify-between items-center mb-6">
+          <h1 class="text-xl font-extrabold text-gray-800 tracking-tight">
+            Tank Controller
+          </h1>
+          <div
+            id="connectionStatus"
+            class="flex items-center gap-2 text-sm font-medium text-gray-500"
+          >
+            <span
+              id="statusDot"
+              class="w-3 height h-3 rounded-full bg-red-500 transition-colors duration-300"
+            ></span>
+            <span id="statusText">Disconnected</span>
           </div>
         </div>
 
-        <div class="border-l-2 h-6"></div>
+        <div class="space-y-4">
+          <div class="flex flex-col gap-1.5">
+            <label
+              class="text-xs font-bold uppercase tracking-wider text-gray-500"
+              >Edge Server</label
+            >
+            <input
+              id="serverUrl"
+              autocomplete="off"
+              class="w-full px-3 py-2 border border-gray-300 rounded-xl bg-gray-50 text-gray-700 outline-none focus:border-blue-500 transition-all text-sm"
+            />
+          </div>
 
-        <div class="flex items-center gap-2 w-full">
-          <div class="w-16">Shield</div>
-          <div class="flex-1 bg-gray-300 rounded-full h-2">
-            <div class="bg-blue-500 h-2 rounded-full" style="width: 45%"></div>
+          <div class="flex flex-col gap-1.5">
+            <label
+              class="text-xs font-bold uppercase tracking-wider text-gray-500"
+              >Player Slot</label
+            >
+            <select
+              id="player"
+              class="w-full px-3 py-2 border border-gray-300 rounded-xl bg-gray-50 text-gray-700 outline-none focus:border-blue-500 transition-all text-sm"
+            >
+              <option value="p1">Player 1</option>
+              <option value="p2">Player 2</option>
+            </select>
+          </div>
+
+          <div class="flex flex-col gap-1.5">
+            <label
+              class="text-xs font-bold uppercase tracking-wider text-gray-500"
+              >Callsign / Name</label
+            >
+            <input
+              id="username"
+              value="Driver"
+              class="w-full px-3 py-2 border border-gray-300 rounded-xl bg-gray-50 text-gray-700 outline-none focus:border-blue-500 transition-all text-sm"
+            />
           </div>
         </div>
-      </div>
 
-      <div class="flex gap-4 pt-2">
-        <div class="pad" aria-label="Joystick">
-          <div id="joystick" class=""></div>
-        </div>
-
-        <div class="actions flex-1 grid grid-cols-2 gap-2">
-          <button id="connect" class="border-2 p-2 bg-green-500" type="button">
+        <div class="flex gap-3 mt-6">
+          <button
+            id="connect"
+            class="flex-1 rounded-xl py-3 font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-md active:scale-[0.98] transition-all text-sm"
+          >
             Connect
           </button>
-
-          <button id="start" class="border-2 p-2 bg-green-500" type="button">
-            Start
-          </button>
-
-          <button id="fire" class="danger col-span-2 border-2 p-2 bg-red-500">
-            Fire
+          <button
+            id="start"
+            class="flex-1 rounded-xl py-3 font-bold text-white bg-emerald-600 hover:bg-emerald-700 shadow-md active:scale-[0.98] transition-all text-sm"
+          >
+            Start Game
           </button>
         </div>
       </div>
+    </div>
 
-      <section class="flex gap-5 ps-5" aria-live="polite">
-        <div>Throttle <strong id="throttle">0.00</strong></div>
-        <div>Steering <strong id="steering">0.00</strong></div>
-      </section>
+    <!-- =====================
+         GAME
+    ===================== -->
+    <div id="game" class="hidden">
+      <div class="controller">
+        <div class="controls">
+          <div id="joystick"></div>
+          <button id="fire">FIRE</button>
+        </div>
+
+        <div class="debug">
+          <div class="debug-box">
+            Throttle:
+            <strong id="throttle" class="text-emerald-400">0.00</strong>
+          </div>
+          <div class="debug-box">
+            Steering: <strong id="steering" class="text-cyan-400">0.00</strong>
+          </div>
+        </div>
+      </div>
     </div>
 
     <script>
@@ -166,6 +233,8 @@
       const connectButton = document.querySelector("#connect");
       const startButton = document.querySelector("#start");
       const fireButton = document.querySelector("#fire");
+      const pregame = document.querySelector("#pregame");
+      const game = document.querySelector("#game");
 
       const defaultProtocol =
         window.location.protocol === "https:" ? "wss:" : "ws:";
@@ -175,16 +244,19 @@
       let seq = 0;
       let latest = { throttle: 0, steering: 0, fire: false };
       let sendTimer;
+      let joystick;
 
-      const joystickZone = document.querySelector("#joystick");
+      function initJoystick() {
+        if (joystick) return;
+        const joystickZone = document.querySelector("#joystick");
+        if (!window.nipplejs) return;
 
-      if (window.nipplejs) {
-        const joystick = nipplejs.create({
+        joystick = nipplejs.create({
           zone: joystickZone,
           mode: "static",
-          position: { left: "50%", top: "50%" },
-          color: "#f5f7fa",
-          size: 190,
+          position: { left: "25%", top: "50%" },
+          color: "#9ca3af",
+          size: 180,
         });
 
         joystick.on("move", (_event, data) => {
@@ -197,13 +269,6 @@
         });
 
         joystick.on("end", stopMoving);
-      } else {
-        joystickZone.style.border = "1px solid var(--line)";
-        joystickZone.style.borderRadius = "50%";
-        joystickZone.addEventListener("pointerdown", handleFallbackPointer);
-        joystickZone.addEventListener("pointermove", handleFallbackPointer);
-        joystickZone.addEventListener("pointerup", stopMoving);
-        joystickZone.addEventListener("pointercancel", stopMoving);
       }
 
       connectButton.addEventListener("click", () => {
@@ -214,7 +279,19 @@
         connect();
       });
 
-      startButton.addEventListener("click", () => sendJson({ type: "start" }));
+      startButton.addEventListener("click", async () => {
+        sendJson({ type: "start" });
+
+        // FIX: Override CSS ID specificity rule directly
+        pregame.style.display = "none";
+        game.classList.remove("hidden");
+
+        requestAnimationFrame(() => {
+          initJoystick();
+        });
+
+        await enterLandscape();
+      });
 
       fireButton.addEventListener("pointerdown", () => {
         latest.fire = true;
@@ -237,25 +314,36 @@
         url.searchParams.set("player", playerInput.value);
         url.searchParams.set("username", usernameInput.value || "Driver");
 
-        setStatus("Connecting", false);
+        setStatus("Connecting", "bg-yellow-500");
         socket = new WebSocket(url);
 
         socket.addEventListener("open", () => {
-          setStatus("Connected", true);
+          setStatus("Connected", "bg-emerald-500");
           connectButton.textContent = "Disconnect";
+          connectButton.classList.replace("bg-blue-600", "bg-gray-600");
           sendTimer = window.setInterval(sendInput, 50);
         });
 
         socket.addEventListener("close", () => {
           window.clearInterval(sendTimer);
-          setStatus("Disconnected", false);
+          setStatus("Disconnected", "bg-red-500");
           connectButton.textContent = "Connect";
+          connectButton.classList.replace("bg-gray-600", "bg-blue-600");
         });
 
         socket.addEventListener("error", () =>
-          setStatus("Connection error", false),
+          setStatus("Error", "bg-red-500"),
         );
       }
+
+      function checkOrientation() {
+        if (window.innerHeight > window.innerWidth) {
+          alert("Please rotate your phone to landscape.");
+        }
+      }
+
+      window.addEventListener("resize", checkOrientation);
+      checkOrientation();
 
       function sendInput() {
         sendJson({
@@ -273,30 +361,15 @@
         }
       }
 
-      function handleFallbackPointer(event) {
-        if (event.buttons === 0) {
-          return;
-        }
-
-        const rect = joystickZone.getBoundingClientRect();
-        const radius = rect.width / 2;
-        latest = {
-          ...latest,
-          throttle: clamp((rect.top + radius - event.clientY) / radius),
-          steering: clamp((event.clientX - rect.left - radius) / radius),
-        };
-        renderAxes();
-      }
-
       function stopMoving() {
         latest = { ...latest, throttle: 0, steering: 0 };
         renderAxes();
         sendInput();
       }
 
-      function setStatus(text, connected) {
+      function setStatus(text, dotColorClass) {
         statusText.textContent = text;
-        statusDot.classList.toggle("connected", connected);
+        statusDot.className = `w-3 h-3 rounded-full transition-colors duration-300 ${dotColorClass}`;
       }
 
       function renderAxes() {
@@ -306,6 +379,16 @@
 
       function clamp(value) {
         return Math.max(-1, Math.min(1, value));
+      }
+
+      async function enterLandscape() {
+        try {
+          if (screen.orientation) {
+            await screen.orientation.lock("landscape");
+          }
+        } catch (error) {
+          console.log("Orientation lock unavailable", error);
+        }
       }
     </script>
   </body>
