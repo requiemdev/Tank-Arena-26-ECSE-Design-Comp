@@ -132,17 +132,16 @@ void printPayload(uint8_t *payload, size_t length) {
 }
 
 void sendSensorHitMessage(int8_t sensor) {
-  String* msg = new String("Direction # = ");
+  String* msg = new String("{\"type\":\"hit\",\"direction\":");
   if (sensor == SensorDirection::FRONT) {
-    msg->concat("FRONT");
+    msg->concat("\"front\"}");
   } else if (sensor == SensorDirection::LEFT) {
-    msg->concat("LEFT");
+    msg->concat("\"left\"}");
   } else if (sensor == SensorDirection::BACK) {
-    msg->concat("BACK");
+    msg->concat("\"back\"}");
   } else if (sensor == SensorDirection::RIGHT) {
-    msg->concat("RIGHT");
+    msg->concat("\"right\"}");
   }
-  msg->concat("\n");
 
   Serial.printf(msg->c_str());
 
