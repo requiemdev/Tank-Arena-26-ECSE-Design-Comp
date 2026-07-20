@@ -7,6 +7,11 @@
 #include "tank_timers.h"
 #include "websocket.h"
 
+#define FRONT_PIN PIN_VCOMP1
+#define RIGHT_PIN PIN_VCOMP2
+#define LEFT_PIN PIN_VCOMP3
+#define BACK_PIN PIN_VCOMP4
+
 enum SensorDirection {
     FRONT,
     RIGHT,

@@ -43,27 +43,35 @@ void onSensorHit(SensorDirection sensor_direction) {
 }
 
 void IRAM_ATTR onHitFront() {
-    onSensorHit(SensorDirection::FRONT);
+    if (digitalRead(FRONT_PIN) == LOW) {
+        onSensorHit(SensorDirection::FRONT);
+    }
 }
 
 void IRAM_ATTR onHitRight() {
-    onSensorHit(SensorDirection::RIGHT);
+    if (digitalRead(RIGHT_PIN) == LOW) {
+        onSensorHit(SensorDirection::RIGHT);
+    }
 }
 
 void IRAM_ATTR onHitLeft() {
-    onSensorHit(SensorDirection::LEFT);
+    if (digitalRead(LEFT_PIN) == LOW) {
+        onSensorHit(SensorDirection::LEFT);
+    }
 }
 
 void IRAM_ATTR onHitBack() {
-    onSensorHit(SensorDirection::BACK);
+    if (digitalRead(BACK_PIN) == LOW) {
+        onSensorHit(SensorDirection::BACK);
+    }
 }
 
 void initialiseSensors(/*std::function<void(SensorDirection)> function*/) {
 
     // Change depending on how pins connect to sensor directions.
-    attachInterrupt(digitalPinToInterrupt(PIN_VCOMP1), onHitFront, FALLING);
-    attachInterrupt(digitalPinToInterrupt(PIN_VCOMP2), onHitRight, FALLING);
-    attachInterrupt(digitalPinToInterrupt(PIN_VCOMP3), onHitLeft, FALLING);
-    attachInterrupt(digitalPinToInterrupt(PIN_VCOMP4), onHitBack, FALLING);
+    attachInterrupt(digitalPinToInterrupt(FRONT_PIN), onHitFront, FALLING);
+    attachInterrupt(digitalPinToInterrupt(RIGHT_PIN), onHitRight, FALLING);
+    attachInterrupt(digitalPinToInterrupt(LEFT_PIN), onHitLeft, FALLING);
+    attachInterrupt(digitalPinToInterrupt(BACK_PIN), onHitBack, FALLING);
 }
 
