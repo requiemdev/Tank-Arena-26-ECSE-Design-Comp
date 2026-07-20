@@ -8,6 +8,30 @@ volatile bool button_pressed = false;
 
 void onSensorHit(SensorDirection sensor_direction) {
     unsigned long current_time = millis();
+
+    #ifdef PRINT_HIT_DIRECTIONS
+    switch (sensor_direction) {
+        case FRONT:
+            Serial.printf("Hit detected: front\n");
+            break;
+
+        case LEFT:
+            Serial.printf("Hit detected: left\n");
+            break;
+
+        case RIGHT:
+            Serial.printf("Hit detected: right\n");
+            break;
+
+        case BACK:
+            Serial.printf("Hit detected: back\n");
+            break;
+        
+        default:
+            break;
+    }
+    #endif // PRINT_HIT_DIRECTIONS
+
     if(current_time - button_timer > DEBOUNCE_TIME_MS){
         button_pressed = true;
         button_timer = current_time;
@@ -39,7 +63,7 @@ void initialiseSensors(/*std::function<void(SensorDirection)> function*/) {
     // Change depending on how pins connect to sensor directions.
     attachInterrupt(digitalPinToInterrupt(PIN_VCOMP1), onHitFront, FALLING);
     attachInterrupt(digitalPinToInterrupt(PIN_VCOMP2), onHitRight, FALLING);
-    attachInterrupt(digitalPinToInterrupt(PIN_VCOMP3), onHitBack, FALLING);
-    attachInterrupt(digitalPinToInterrupt(PIN_VCOMP4), onHitLeft, FALLING);
+    attachInterrupt(digitalPinToInterrupt(PIN_VCOMP3), onHitLeft, FALLING);
+    attachInterrupt(digitalPinToInterrupt(PIN_VCOMP4), onHitBack, FALLING);
 }
 

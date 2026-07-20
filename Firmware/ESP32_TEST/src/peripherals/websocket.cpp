@@ -1,17 +1,16 @@
 #include "websocket.h"
 
-
+#include "global_config.h"
 
 // ============================================================================
 // WIFI CONFIG
 // ============================================================================
-const char *WIFI_SSID = "TankRouter";
-const char *WIFI_PASSWORD = "WeLoveTanksPewPew";
+#define WIFI_SSID "TankRouter"
+#define WIFI_PASSWORD "WeLoveTanksPewPew"
 
-const char *SERVER_HOST = "192.168.1.67";
-const uint16_t SERVER_PORT = 8080;
-const char *PLAYER_SLOT = "p1"; // Use "p1" or "p2".
-const char *ROBOT_NAME = "esp32-tank";
+#define SERVER_HOST "192.168.1.67"
+#define SERVER_PORT 8080
+#define ROBOT_NAME "esp32-tank"
 
 WebSocketsClient webSocket;
 
