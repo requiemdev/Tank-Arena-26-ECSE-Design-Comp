@@ -124,7 +124,7 @@ export async function syncOldestPendingMatch(): Promise<void> {
     await insertLeaderboardRow(supabase, row);
     deleteMatch.run(row.id);
   } catch (error) {
-    console.warn('Supabase sync failed; will retry pending match later:', error);
+    // console.warn('Supabase sync failed; will retry pending match later:', error);
   } finally {
     isSyncing = false;
   }

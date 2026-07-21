@@ -189,13 +189,14 @@ export class GameEngine {
     return true;
   }
 
-  registerHit(targetPlayer: PlayerSlot): void {
+  registerHit(targetPlayer: PlayerSlot, direction?: string): void {
     if (this.state.status !== 'ACTIVE') {
       return;
     }
 
     const attacker = this.otherPlayer(targetPlayer);
     const target = this.state.players[targetPlayer];
+    target.lastHitDirection = direction?.trim() || 'unknown';
     target.health = Math.max(0, target.health - HIT_DAMAGE);
     this.state.players[attacker].score += HIT_DAMAGE;
 
@@ -371,6 +372,7 @@ export class GameEngine {
           username: 'Player 1',
           health: STARTING_HEALTH,
           score: 0,
+          lastHitDirection: null,
           ready: false,
           socket: null,
           controllerSocket: null
@@ -380,6 +382,7 @@ export class GameEngine {
           username: 'Player 2',
           health: STARTING_HEALTH,
           score: 0,
+          lastHitDirection: null,
           ready: false,
           socket: null,
           controllerSocket: null

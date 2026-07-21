@@ -39,6 +39,7 @@ describe('GameEngine', () => {
           username: 'Player 1',
           health: 100,
           score: 0,
+          lastHitDirection: null,
           ready: false,
           controllerConnected: false,
           tankConnected: false
@@ -48,6 +49,7 @@ describe('GameEngine', () => {
           username: 'Player 2',
           health: 100,
           score: 0,
+          lastHitDirection: null,
           ready: false,
           controllerConnected: false,
           tankConnected: false
@@ -159,6 +161,17 @@ describe('GameEngine', () => {
     assert.equal(results.length, 1);
   });
 
+  it('records the latest hit direction without changing hit damage', () => {
+    const engine = new GameEngine();
+    engine.getState().status = 'ACTIVE';
+
+    engine.registerHit('p2', 'rear-left');
+
+    assert.equal(engine.getPublicState().players.p2.health, 90);
+    assert.equal(engine.getPublicState().players.p2.lastHitDirection, 'rear-left');
+    assert.equal(engine.getPublicState().players.p1.score, 10);
+  });
+
   it('resets match stats while preserving attached clients and usernames', () => {
     const engine = new GameEngine();
     const tank = createOpenSocket();
@@ -179,6 +192,7 @@ describe('GameEngine', () => {
     assert.equal(publicState.players.p1.username, 'Ada');
     assert.equal(publicState.players.p1.score, 0);
     assert.equal(publicState.players.p1.health, 100);
+    assert.equal(publicState.players.p1.lastHitDirection, null);
     assert.equal(publicState.players.p1.ready, false);
     assert.equal(publicState.players.p1.tankConnected, true);
     assert.equal(publicState.players.p1.controllerConnected, true);

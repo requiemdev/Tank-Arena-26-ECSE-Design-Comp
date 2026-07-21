@@ -9,6 +9,7 @@ export interface PlayerState {
   username: string;
   health: number;
   score: number;
+  lastHitDirection: string | null;
   ready: boolean;
   socket: WebSocket | null;
   controllerSocket: WebSocket | null;
@@ -137,6 +138,7 @@ export function publicGameState(state: GameState): Omit<GameState, 'players'> & 
         username: state.players.p1.username,
         health: state.players.p1.health,
         score: state.players.p1.score,
+        lastHitDirection: state.players.p1.lastHitDirection,
         ready: state.players.p1.ready,
         controllerConnected: state.players.p1.controllerSocket !== null,
         tankConnected: state.players.p1.socket !== null
@@ -146,6 +148,7 @@ export function publicGameState(state: GameState): Omit<GameState, 'players'> & 
         username: state.players.p2.username,
         health: state.players.p2.health,
         score: state.players.p2.score,
+        lastHitDirection: state.players.p2.lastHitDirection,
         ready: state.players.p2.ready,
         controllerConnected: state.players.p2.controllerSocket !== null,
         tankConnected: state.players.p2.socket !== null

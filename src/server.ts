@@ -223,7 +223,7 @@ function handleControlMessage(
       if (!target) {
         return true;
       }
-      gameEngine.registerHit(target);
+      gameEngine.registerHit(target, message.direction);
       return true;
     }
     case 'state':

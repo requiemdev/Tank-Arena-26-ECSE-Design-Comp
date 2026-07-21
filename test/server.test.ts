@@ -41,6 +41,9 @@ describe('HTTP implementation', () => {
     assert.match(response.body, /Tank Controller/);
     assert.match(response.body, /nipplejs/);
     assert.match(response.body, /countdownScreen/);
+    assert.match(response.body, /FIRE_COOLDOWN_MS = 2000/);
+    assert.match(response.body, /tankLinkIndicator/);
+    assert.match(response.body, /lastHitValue/);
   });
 
   it('starts countdown once and rejects duplicate start requests while in progress', async (t) => {
@@ -114,6 +117,7 @@ describe('HTTP implementation', () => {
     });
 
     assert.equal(engine.getPublicState().players.p2.health, 90);
+    assert.equal(engine.getPublicState().players.p2.lastHitDirection, 'front');
     assert.equal(engine.getPublicState().players.p1.score, 10);
     assert.equal(removedEndpointResponse.statusCode, 404);
   });

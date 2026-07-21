@@ -23,11 +23,13 @@
       }
 
       body {
-        min-height: 100dvh;
+        width: 100dvw;
+        height: 100dvh;
         margin: 0;
         display: grid;
         place-items: center;
         padding: clamp(0.5rem, 2vw, 1.5rem);
+        overflow: hidden;
         background: var(--ink);
         color: var(--ink);
         font-family:
@@ -38,11 +40,14 @@
       .controller-shell {
         position: relative;
         width: min(100%, 90rem);
-        min-height: min(92dvh, 48rem);
+        height: min(92dvh, 48rem);
+        min-height: 0;
+        overflow: hidden;
         display: grid;
         grid-template:
           "brand brand brand" auto
-          "move screen action" minmax(0, 1fr) /
+          "move screen action" minmax(0, 1fr)
+          ". end-control ." auto /
           minmax(7rem, 0.75fr) minmax(15rem, 1.65fr) minmax(8rem, 0.8fr);
         gap: clamp(0.75rem, 2.4vw, 2.5rem);
         align-items: center;
@@ -97,6 +102,7 @@
       }
 
       .brand-model {
+        grid-column: 3;
         justify-self: end;
         min-width: 0;
         color: rgba(39, 41, 41, 0.66);
@@ -105,6 +111,35 @@
         font-weight: 700;
         letter-spacing: 0.18em;
         text-transform: uppercase;
+      }
+
+      .tank-link-indicator {
+        grid-column: 2;
+        justify-self: center;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        color: rgba(39, 41, 41, 0.72);
+        font-size: clamp(0.54rem, 1vw, 0.68rem);
+        font-weight: 900;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .case-led {
+        width: 0.72rem;
+        height: 0.72rem;
+        background: #57212f;
+        border: 0.12rem solid var(--ink);
+        border-radius: 50%;
+        box-shadow: inset 0.12rem 0.12rem 0 rgba(255, 255, 255, 0.16);
+      }
+
+      .tank-link-indicator.online .case-led {
+        background: #65d86e;
+        box-shadow:
+          inset 0.12rem 0.12rem 0 rgba(255, 255, 255, 0.35),
+          0 0 0.55rem rgba(59, 209, 73, 0.9);
       }
 
       .move-deck,
@@ -127,7 +162,7 @@
       .screen-bezel {
         grid-area: screen;
         align-self: stretch;
-        min-height: min(70dvh, 34rem);
+        min-height: 0;
         padding: clamp(0.75rem, 1.8vw, 1.35rem);
         background: var(--ink);
         border: 0.2rem solid var(--ink);
@@ -176,9 +211,8 @@
 
       .screen-content {
         min-height: 0;
-        overflow: auto;
+        overflow: hidden;
         padding: clamp(0.7rem, 1.7vw, 1.2rem);
-        scrollbar-color: var(--ink) var(--screen);
       }
 
       .status {
@@ -366,7 +400,7 @@
 
       .hud {
         display: grid;
-        gap: clamp(0.9rem, 2.2vw, 1.5rem);
+        gap: clamp(0.55rem, 1.5vw, 0.9rem);
       }
 
       .hud-label {
@@ -393,6 +427,36 @@
         transition: width 180ms ease;
       }
 
+      .combat-readout {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.4rem 0.8rem;
+        padding-top: clamp(0.45rem, 1.2vw, 0.75rem);
+        border-top: 0.14rem solid rgba(39, 41, 41, 0.6);
+        font-size: clamp(0.58rem, 1.25vw, 0.76rem);
+        font-weight: 800;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+
+      .combat-readout div {
+        min-width: 0;
+        display: flex;
+        justify-content: space-between;
+        gap: 0.5rem;
+      }
+
+      .combat-readout .last-hit-readout {
+        grid-column: 1 / -1;
+      }
+
+      .readout-value {
+        overflow: hidden;
+        font-weight: 900;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
       .pad {
         position: relative;
         width: var(--stick-size);
@@ -404,33 +468,67 @@
       }
 
       #joystick {
-        width: 100%;
+        width: var(--joystick-outer-size, 72%);
         aspect-ratio: 1;
         position: relative;
         pointer-events: none;
-        background:
-          radial-gradient(circle at 42% 36%, #555858 0 10%, var(--ink) 45% 62%, #171818 63%);
-        border: clamp(0.2rem, 0.5vw, 0.42rem) solid var(--ink);
+        background: #737878;
+        border: 0;
         border-radius: 50%;
         box-shadow:
+          inset 0 0 0 clamp(0.2rem, 0.5vw, 0.42rem) var(--ink),
           inset 0.35rem 0.45rem 0 rgba(255, 255, 255, 0.08),
           0 0.5rem 0 rgba(39, 41, 41, 0.38);
         transition: opacity 120ms ease;
       }
 
+      #joystick::after,
+      .pad .nipple .front {
+        width: var(--joystick-inner-size, 6rem) !important;
+        height: var(--joystick-inner-size, 6rem) !important;
+        background: var(--ink) !important;
+        border: clamp(0.14rem, 0.35vw, 0.24rem) solid var(--shell) !important;
+        border-radius: 50% !important;
+        box-shadow:
+          inset 0.2rem 0.25rem 0 rgba(255, 255, 255, 0.12),
+          0 0 0 0.1rem var(--ink) !important;
+      }
+
+      #joystick::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+      }
+
       .pad:has(.nipple) #joystick {
-        opacity: 0.28;
+        opacity: 1;
+      }
+
+      .pad:has(.nipple) #joystick::after {
+        opacity: 0;
+      }
+
+      .pad .nipple {
+        opacity: 1 !important;
       }
 
       .pad .nipple .back {
-        background: var(--ink) !important;
-        opacity: 0.42 !important;
+        background: #737878 !important;
+        border: 0 !important;
+        opacity: 0 !important;
+        box-shadow:
+          inset 0 0 0 clamp(0.2rem, 0.5vw, 0.42rem) var(--ink),
+          inset 0.35rem 0.45rem 0 rgba(255, 255, 255, 0.08),
+          0 0.5rem 0 rgba(39, 41, 41, 0.38) !important;
       }
 
       .pad .nipple .front {
-        background: #3b3e3e !important;
+        margin-top: calc(var(--joystick-inner-size, 6rem) / -2) !important;
+        margin-left: calc(var(--joystick-inner-size, 6rem) / -2) !important;
         opacity: 1 !important;
-        box-shadow: inset 0.2rem 0.25rem 0 rgba(255, 255, 255, 0.1);
+        z-index: 2 !important;
       }
 
       .actions {
@@ -482,6 +580,7 @@
       }
 
       .disconnect-key {
+        grid-area: end-control;
         justify-self: center;
         min-width: clamp(3.8rem, 8vw, 5.4rem);
         min-height: clamp(1.75rem, 4dvh, 2.2rem);
@@ -520,7 +619,7 @@
             minmax(var(--stick-size), 0.75fr)
             minmax(12rem, 1.65fr)
             minmax(calc(var(--button-size) * 2 + var(--action-gap)), 0.8fr);
-          grid-template-rows: auto minmax(0, 1fr);
+          grid-template-rows: auto minmax(0, 1fr) auto;
           gap: 0.45rem clamp(0.75rem, 2.4vw, 2.5rem);
           padding: 0.5rem 0.75rem 0.75rem;
           border-radius: 2rem 2rem 2.7rem 2.2rem;
@@ -558,10 +657,13 @@
         }
 
         .controller-shell {
-          min-height: 100dvh;
+          width: 100dvw;
+          height: 100dvh;
+          min-height: 0;
           grid-template:
             "brand brand" auto
-            "screen screen" minmax(24rem, auto)
+            "screen screen" minmax(0, 1fr)
+            "end-control end-control" auto
             "move action" auto /
             1fr 1fr;
           border-width: 0;
@@ -569,7 +671,7 @@
         }
 
         .screen-bezel {
-          min-height: 24rem;
+          min-height: 0;
         }
 
         .move-deck,
@@ -590,9 +692,10 @@
     <main class="controller-shell">
       <header class="brand-strip">
         <p class="brand-mark">Pixel Armor</p>
-        <button id="gameDisconnect" class="disconnect-key" type="button">
-          End
-        </button>
+        <div id="tankLinkIndicator" class="tank-link-indicator" aria-label="Tank link offline">
+          <span class="case-led" aria-hidden="true"></span>
+          <span id="tankLinkText">Tank offline</span>
+        </div>
         <span class="brand-model">ECSE handheld control unit</span>
       </header>
 
@@ -652,6 +755,11 @@
                 <div class="meter">
                   <div id="healthFill" class="meter-fill" style="width: 100%"></div>
                 </div>
+                <div class="combat-readout" aria-live="polite">
+                  <div><span>Time</span><span id="matchTimeValue" class="readout-value">180s</span></div>
+                  <div><span>Weapon</span><span id="weaponCooldownValue" class="readout-value">Ready</span></div>
+                  <div class="last-hit-readout"><span>Last hit from</span><span id="lastHitValue" class="readout-value">No hits</span></div>
+                </div>
               </div>
             </section>
 
@@ -672,6 +780,10 @@
           </div>
         </div>
       </section>
+
+      <button id="gameDisconnect" class="disconnect-key" type="button">
+        End
+      </button>
 
       <section class="action-deck" aria-label="Action controls">
         <div class="actions">
@@ -705,6 +817,11 @@
       const gameDisconnectButton = document.querySelector("#gameDisconnect");
       const healthFill = document.querySelector("#healthFill");
       const healthValue = document.querySelector("#healthValue");
+      const matchTimeValue = document.querySelector("#matchTimeValue");
+      const weaponCooldownValue = document.querySelector("#weaponCooldownValue");
+      const lastHitValue = document.querySelector("#lastHitValue");
+      const tankLinkIndicator = document.querySelector("#tankLinkIndicator");
+      const tankLinkText = document.querySelector("#tankLinkText");
       const fireButton = document.querySelector("#fire");
       const leftButton = document.querySelector("#left");
       const rightButton = document.querySelector("#right");
@@ -720,12 +837,15 @@
       const defaultProtocol =
         window.location.protocol === "https:" ? "wss:" : "ws:";
       const serverUrl = `${defaultProtocol}//${window.location.host}/connect`;
+      const FIRE_COOLDOWN_MS = 2000;
 
       let socket;
       let seq = 0;
       let latest = { throttle: 0, steering: 0, fire: false, left: false, right: false };
       let sendTimer;
       let stateTimer;
+      let fireCooldownTimer;
+      let fireCooldownEndsAt = 0;
       let gameState;
       let joystick;
       let fallbackJoystickReady = false;
@@ -746,7 +866,7 @@
       });
 
       gameDisconnectButton.addEventListener("click", () => socket?.close());
-      bindHeldButton(fireButton, "fire");
+      bindFireButton();
       bindTurnButton(leftButton, "left");
       bindTurnButton(rightButton, "right");
       window.addEventListener("resize", resetJoystick);
@@ -772,6 +892,7 @@
 
         socket.addEventListener("close", () => {
           window.clearInterval(sendTimer);
+          clearFireCooldown();
           setStatus("Disconnected", false);
           connectButton.textContent = "Connect";
           playerInput.disabled = false;
@@ -842,12 +963,14 @@
         p1StateText.textContent = formatPlayerState(p1);
         p2StateText.textContent = formatPlayerState(p2);
         renderPlayerHealth();
+        renderTankLink();
 
         if (gameState.status === "COUNTDOWN") {
           matchStateText.textContent = `Starting in ${gameState.countdownSeconds}`;
           countdownNumber.textContent = gameState.countdownSeconds;
         } else if (gameState.status === "ACTIVE") {
           matchStateText.textContent = `Match active: ${gameState.remainingSeconds}s left`;
+          matchTimeValue.textContent = `${gameState.remainingSeconds}s`;
         } else if (gameState.status === "ENDED") {
           matchStateText.textContent = gameState.winner
             ? `${gameState.players[gameState.winner].username} wins`
@@ -868,6 +991,7 @@
         if (isActive) {
           window.requestAnimationFrame(setupJoystick);
         } else {
+          clearFireCooldown();
           teardownJoystick();
         }
         syncPlayerOptions();
@@ -882,10 +1006,21 @@
       }
 
       function renderPlayerHealth() {
-        const health = gameState.players[playerInput.value]?.health ?? 0;
+        const player = gameState.players[playerInput.value];
+        const health = player?.health ?? 0;
         const healthPercent = Math.max(0, Math.min(100, health));
         healthFill.style.width = `${healthPercent}%`;
         healthValue.textContent = String(health);
+        lastHitValue.textContent = player?.lastHitDirection
+          ? formatHitDirection(player.lastHitDirection)
+          : "No hits";
+      }
+
+      function renderTankLink() {
+        const connected = Boolean(gameState.players[playerInput.value]?.tankConnected);
+        tankLinkIndicator.classList.toggle("online", connected);
+        tankLinkIndicator.setAttribute("aria-label", `Tank link ${connected ? "online" : "offline"}`);
+        tankLinkText.textContent = connected ? "Tank online" : "Tank offline";
       }
 
       function syncPlayerOptions() {
@@ -904,15 +1039,21 @@
         const ready = Boolean(player?.ready);
         const lobbyStatus = !gameState || gameState.status === "LOBBY" || gameState.status === "ENDED";
         const selectedSlotLocked = Boolean(!connected && player?.controllerConnected);
+        const canControl = connected && gameState?.status === "ACTIVE";
+        const cooldownMs = Math.max(0, fireCooldownEndsAt - Date.now());
 
         connectButton.disabled = selectedSlotLocked;
         readyButton.disabled = !connected || !lobbyStatus;
         readyButton.textContent = ready ? "Unready" : "Ready";
         gameDisconnectButton.disabled = !connected;
-        fireButton.disabled = !connected || gameState?.status !== "ACTIVE";
-        leftButton.disabled = fireButton.disabled;
-        rightButton.disabled = fireButton.disabled;
-        if (fireButton.disabled) {
+        fireButton.disabled = !canControl || cooldownMs > 0;
+        fireButton.textContent = cooldownMs > 0 ? `${(cooldownMs / 1000).toFixed(1)}s` : "Fire";
+        weaponCooldownValue.textContent = cooldownMs > 0
+          ? `Reloading ${(cooldownMs / 1000).toFixed(1)}s`
+          : "Ready";
+        leftButton.disabled = !canControl;
+        rightButton.disabled = !canControl;
+        if (!canControl) {
           heldTurns.length = 0;
           latest.fire = false;
           latest.left = false;
@@ -920,22 +1061,35 @@
         }
       }
 
-      function bindHeldButton(button, control) {
-        button.addEventListener("pointerdown", (event) => {
-          button.setPointerCapture(event.pointerId);
-          latest[control] = true;
-          sendInput();
-        });
-
-        const release = () => {
-          if (latest[control]) {
-            latest[control] = false;
-            sendInput();
+      function bindFireButton() {
+        fireButton.addEventListener("pointerdown", () => {
+          if (fireButton.disabled || Date.now() < fireCooldownEndsAt) {
+            return;
           }
-        };
-        button.addEventListener("pointerup", release);
-        button.addEventListener("pointercancel", release);
-        button.addEventListener("lostpointercapture", release);
+
+          fireCooldownEndsAt = Date.now() + FIRE_COOLDOWN_MS;
+          latest.fire = true;
+          sendInput();
+          latest.fire = false;
+          startFireCooldownTimer();
+          updateControls();
+        });
+      }
+
+      function startFireCooldownTimer() {
+        window.clearInterval(fireCooldownTimer);
+        fireCooldownTimer = window.setInterval(() => {
+          if (Date.now() >= fireCooldownEndsAt) {
+            clearFireCooldown();
+          }
+          updateControls();
+        }, 100);
+      }
+
+      function clearFireCooldown() {
+        window.clearInterval(fireCooldownTimer);
+        fireCooldownTimer = undefined;
+        fireCooldownEndsAt = 0;
       }
 
       function bindTurnButton(button, direction) {
@@ -990,17 +1144,18 @@
           return;
         }
 
-        const rect = joystickZone.getBoundingClientRect();
-        if (!rect.width || !rect.height) {
+        const dimensions = syncJoystickDimensions();
+        if (!dimensions) {
           return;
         }
+
+        const { rect, outerSize: size } = dimensions;
 
         if (!window.nipplejs) {
           setupFallbackJoystick();
           return;
         }
 
-        const size = Math.min(rect.width, rect.height) * 0.72;
         joystick = nipplejs.create({
           zone: joystickZone,
           mode: "static",
@@ -1020,6 +1175,7 @@
       }
 
       function resetJoystick() {
+        syncJoystickDimensions();
         if (!joystick) {
           return;
         }
@@ -1027,6 +1183,19 @@
         joystick.destroy();
         joystick = null;
         window.requestAnimationFrame(setupJoystick);
+      }
+
+      function syncJoystickDimensions() {
+        const rect = joystickZone.getBoundingClientRect();
+        if (!rect.width || !rect.height) {
+          return null;
+        }
+
+        const outerSize = Math.min(rect.width, rect.height) * 0.72;
+        const innerSize = outerSize * 0.68;
+        joystickZone.style.setProperty("--joystick-outer-size", `${outerSize}px`);
+        joystickZone.style.setProperty("--joystick-inner-size", `${innerSize}px`);
+        return { rect, outerSize };
       }
 
       function setupFallbackJoystick() {
@@ -1074,11 +1243,16 @@
         statusDot.classList.toggle("connected", connected);
       }
 
+      function formatHitDirection(direction) {
+        return direction.replace(/[_-]+/g, " ");
+      }
+
       function clamp(value) {
         return Math.max(-1, Math.min(1, value));
       }
 
       stateTimer = window.setInterval(requestState, 1000);
+      window.requestAnimationFrame(syncJoystickDimensions);
       requestState();
       updateControls();
     </script>
