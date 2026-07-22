@@ -44,6 +44,9 @@ Command* CommandReader::interpretPayload() {
     while (index < length && payload[index] != '\0') {
         String* key = readKey();
         if (!read_success) {
+            if (key != nullptr) {
+                delete key;
+            }
             return nullptr;
         }
 
@@ -102,9 +105,15 @@ Command* CommandReader::interpretPayload() {
             Serial.printf("Invalid field: %s, exiting!\n", key->c_str());
             #endif // PRINT_COMMAND_INTERPRET_INFORMATION
             
+            if (key != nullptr) {
+                delete key;
+            }
             return nullptr;
         }
         fields_set += 1;
+        if (key != nullptr) {
+            delete key;
+        }
     }
 
     if (fields_set == 7 && read_success) {
