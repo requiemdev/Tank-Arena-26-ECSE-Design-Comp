@@ -178,6 +178,8 @@
         display: grid;
         grid-template-rows: auto minmax(0, 1fr);
         overflow: hidden;
+        container-name: controller-display;
+        container-type: size;
         background:
           repeating-linear-gradient(
             0deg,
@@ -211,8 +213,10 @@
 
       .screen-content {
         min-height: 0;
-        overflow: hidden;
+        overflow-x: hidden;
+        overflow-y: auto;
         padding: clamp(0.7rem, 1.7vw, 1.2rem);
+        scrollbar-width: thin;
       }
 
       .status {
@@ -251,6 +255,11 @@
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: clamp(0.55rem, 1.4vw, 0.9rem);
+      }
+
+      #preGame > *,
+      #preGame > div > * {
+        min-width: 0;
       }
 
       label {
@@ -601,11 +610,186 @@
         display: none !important;
       }
 
+      @container controller-display (max-height: 21rem) {
+        .screen-header {
+          gap: clamp(0.25rem, 2cqw, 0.5rem);
+          padding: clamp(0.3rem, 2.5cqh, 0.55rem)
+            clamp(0.4rem, 3cqw, 0.7rem);
+        }
+
+        h1 {
+          font-size: clamp(0.6rem, min(4.5cqh, 4cqw), 0.82rem);
+          white-space: nowrap;
+        }
+
+        .status {
+          gap: 0.25rem;
+          font-size: clamp(0.48rem, min(3.3cqh, 3cqw), 0.62rem);
+        }
+
+        .dot {
+          width: 0.48rem;
+          height: 0.48rem;
+          border-width: 0.09rem;
+        }
+
+        .screen-content {
+          padding: clamp(0.3rem, 2.5cqh, 0.6rem)
+            clamp(0.4rem, 3cqw, 0.7rem);
+        }
+
+        #preGame,
+        #preGame > div {
+          gap: clamp(0.25rem, 2cqh, 0.45rem);
+        }
+
+        label {
+          gap: 0.15rem;
+          font-size: clamp(0.5rem, min(3.4cqh, 3cqw), 0.62rem);
+        }
+
+        input,
+        select,
+        button {
+          font-size: clamp(0.62rem, min(4.5cqh, 4cqw), 0.78rem);
+          min-height: clamp(1.55rem, 12cqh, 2.15rem);
+          padding: clamp(0.2rem, 2cqh, 0.4rem)
+            clamp(0.3rem, 2.5cqw, 0.55rem);
+        }
+
+        button {
+          border-width: 0.12rem;
+          box-shadow: 0 0.16rem 0 var(--ink);
+        }
+
+        .lobby-info {
+          margin-top: clamp(0.25rem, 2cqh, 0.45rem);
+        }
+
+        section.lobby-info {
+          gap: clamp(0.25rem, 2cqw, 0.4rem);
+        }
+
+        .player-card {
+          padding: clamp(0.25rem, 2.2cqh, 0.45rem);
+        }
+
+        .player-card strong {
+          font-size: clamp(0.52rem, min(3.5cqh, 3cqw), 0.65rem);
+        }
+
+        .player-state {
+          margin-top: 0.12rem;
+          font-size: clamp(0.46rem, min(3cqh, 2.8cqw), 0.58rem);
+          line-height: 1.15;
+        }
+
+        #matchState {
+          padding-top: clamp(0.25rem, 2cqh, 0.4rem);
+          font-size: clamp(0.5rem, min(3.6cqh, 3.2cqw), 0.66rem);
+        }
+
+        #countdownScreen,
+        #inGame {
+          min-height: 0;
+        }
+
+        .hud {
+          gap: clamp(0.3rem, 3cqh, 0.6rem);
+        }
+
+        .hud-label {
+          font-size: clamp(0.58rem, min(4cqh, 3.6cqw), 0.78rem);
+        }
+
+        .meter {
+          height: clamp(0.75rem, 7cqh, 1.1rem);
+        }
+
+        .combat-readout {
+          gap: 0.25rem 0.5rem;
+          padding-top: clamp(0.25rem, 2cqh, 0.45rem);
+          font-size: clamp(0.48rem, min(3.3cqh, 3cqw), 0.62rem);
+        }
+      }
+
+      @container controller-display (max-height: 11rem) {
+        .screen-header {
+          gap: 0.2rem;
+          padding: 0.2rem 0.3rem;
+        }
+
+        h1 {
+          font-size: 0.52rem;
+        }
+
+        .status {
+          gap: 0.18rem;
+          font-size: 0.42rem;
+        }
+
+        .dot {
+          width: 0.38rem;
+          height: 0.38rem;
+          border-width: 0.07rem;
+        }
+
+        .screen-content {
+          padding: 0.08rem 0.2rem;
+        }
+
+        #preGame,
+        #preGame > div {
+          gap: 0.15rem;
+        }
+
+        label {
+          gap: 0.08rem;
+          font-size: 0.44rem;
+        }
+
+        input,
+        select,
+        button {
+          min-height: 1.35rem;
+          padding: 0.1rem 0.2rem;
+          font-size: 0.52rem;
+        }
+
+        .lobby-info {
+          margin-top: 0.06rem;
+        }
+
+        section.lobby-info {
+          gap: 0.15rem;
+        }
+
+        .player-card {
+          padding: 0.12rem;
+        }
+
+        .player-card strong {
+          font-size: 0.46rem;
+        }
+
+        .player-state {
+          margin-top: 0.06rem;
+          font-size: 0.38rem;
+          line-height: 1.05;
+        }
+
+        #matchState {
+          padding-top: 0.12rem;
+          font-size: 0.42rem;
+          line-height: 1.1;
+        }
+      }
+
       @media (orientation: landscape) and (max-height: 520px) {
         :root {
-          --stick-size: clamp(5rem, min(18vw, 44dvh), 13rem);
-          --button-size: clamp(3.5rem, min(11vw, 23dvh), 7rem);
-          --action-gap: clamp(0.65rem, 2vw, 1.25rem);
+          --stick-size: clamp(3.5rem, min(17vw, 38dvh), 13rem);
+          --button-size: clamp(2.75rem, min(10.5vw, 19dvh), 7rem);
+          --action-gap: clamp(0.35rem, 1.5vw, 1.1rem);
         }
 
         body {
@@ -616,9 +800,9 @@
           height: calc(100dvh - 1rem);
           min-height: 0;
           grid-template-columns:
-            minmax(var(--stick-size), 0.75fr)
-            minmax(12rem, 1.65fr)
-            minmax(calc(var(--button-size) * 2 + var(--action-gap)), 0.8fr);
+            minmax(0, 0.75fr)
+            minmax(min(12rem, 42vw), 1.65fr)
+            minmax(0, 0.8fr);
           grid-template-rows: auto minmax(0, 1fr) auto;
           gap: 0.45rem clamp(0.75rem, 2.4vw, 2.5rem);
           padding: 0.5rem 0.75rem 0.75rem;
@@ -629,29 +813,23 @@
           height: 100%;
           min-height: 0;
           overflow: hidden;
+          padding: clamp(0.35rem, 2.5dvh, 0.75rem);
         }
 
         .brand-strip {
           min-height: 1rem;
-          grid-template-columns:
-            minmax(var(--stick-size), 0.75fr)
-            minmax(12rem, 1.65fr)
-            minmax(calc(var(--button-size) * 2 + var(--action-gap)), 0.8fr);
           column-gap: clamp(0.75rem, 2.4vw, 2.5rem);
           padding-inline: 0;
-        }
-
-        .screen-content {
-          padding: 0.6rem 0.75rem;
-        }
-
-        #countdownScreen,
-        #inGame {
-          min-height: 8rem;
         }
       }
 
       @media (orientation: portrait) {
+        :root {
+          --stick-size: clamp(4.5rem, min(30vw, 16dvh), 9rem);
+          --button-size: clamp(3rem, min(18vw, 10dvh), 5.5rem);
+          --action-gap: clamp(0.5rem, 3vw, 1rem);
+        }
+
         body {
           padding: 0;
         }
@@ -666,12 +844,15 @@
             "end-control end-control" auto
             "move action" auto /
             1fr 1fr;
+          gap: clamp(0.35rem, 1.5dvh, 0.75rem);
+          padding: clamp(0.5rem, 2dvh, 1.25rem);
           border-width: 0;
           border-radius: 0;
         }
 
         .screen-bezel {
           min-height: 0;
+          padding: clamp(0.45rem, 2.5vw, 1rem);
         }
 
         .move-deck,
@@ -680,7 +861,7 @@
         }
       }
 
-      @media (max-width: 390px) {
+      @container controller-display (max-width: 14rem) and (min-height: 23rem) {
         #preGame,
         section.lobby-info {
           grid-template-columns: 1fr;
@@ -691,12 +872,11 @@
   <body>
     <main class="controller-shell">
       <header class="brand-strip">
-        <p class="brand-mark">Pixel Armor</p>
+        <p class="brand-mark">TANK ARENA</p>
         <div id="tankLinkIndicator" class="tank-link-indicator" aria-label="Tank link offline">
           <span class="case-led" aria-hidden="true"></span>
           <span id="tankLinkText">Tank offline</span>
         </div>
-        <span class="brand-model">ECSE handheld control unit</span>
       </header>
 
       <section class="move-deck" aria-label="Movement controls">
