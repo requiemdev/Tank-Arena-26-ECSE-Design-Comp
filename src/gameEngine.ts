@@ -6,10 +6,10 @@ import { parsePlayerInputs, publicGameState } from './types.js';
 type MatchCompleteHandler = (matchData: MatchResult) => void | Promise<void>;
 type TimerHandle = ReturnType<typeof setInterval>;
 
-const DEFAULT_MATCH_SECONDS = 180;
+const DEFAULT_MATCH_SECONDS = 120;
 const DEFAULT_COUNTDOWN_SECONDS = 3;
 const STARTING_HEALTH = 100;
-const HIT_DAMAGE = 10;
+const HIT_DAMAGE = 20;
 
 export class GameEngine {
   private readonly spectators = new Set<WebSocket>();
