@@ -1018,6 +1018,8 @@
         window.location.protocol === "https:" ? "wss:" : "ws:";
       const serverUrl = `${defaultProtocol}//${window.location.host}/connect`;
       const FIRE_COOLDOWN_MS = 2000;
+      const FIRE_VIBRATION_MS = 35;
+      const HIT_VIBRATION_PATTERN = [200, 80, 200];
 
       let socket;
       let seq = 0;
@@ -1030,6 +1032,7 @@
       let joystick;
       let fallbackJoystickReady = false;
       const heldTurns = [];
+      const lastRenderedHealth = { p1: undefined, p2: undefined };
 
       connectButton.addEventListener("click", () => {
         if (socket?.readyState === WebSocket.OPEN) {
@@ -1186,8 +1189,21 @@
       }
 
       function renderPlayerHealth() {
-        const player = gameState.players[playerInput.value];
+        const selectedPlayer = playerInput.value;
+        const player = gameState.players[selectedPlayer];
         const health = player?.health ?? 0;
+        const previousHealth = lastRenderedHealth[selectedPlayer];
+
+        if (
+          gameState.status === "ACTIVE" &&
+          previousHealth !== undefined &&
+          health < previousHealth
+        ) {
+          vibrate(HIT_VIBRATION_PATTERN);
+        }
+
+        lastRenderedHealth.p1 = gameState.players.p1.health;
+        lastRenderedHealth.p2 = gameState.players.p2.health;
         const healthPercent = Math.max(0, Math.min(100, health));
         healthFill.style.width = `${healthPercent}%`;
         healthValue.textContent = String(health);
@@ -1248,6 +1264,7 @@
           }
 
           fireCooldownEndsAt = Date.now() + FIRE_COOLDOWN_MS;
+          vibrate(FIRE_VIBRATION_MS);
           latest.fire = true;
           sendInput();
           latest.fire = false;
@@ -1425,6 +1442,10 @@
 
       function formatHitDirection(direction) {
         return direction.replace(/[_-]+/g, " ");
+      }
+
+      function vibrate(pattern) {
+        navigator.vibrate?.(pattern);
       }
 
       function clamp(value) {
