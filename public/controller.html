@@ -451,16 +451,13 @@
       .combat-readout div {
         min-width: 0;
         display: flex;
-        justify-content: space-between;
-        gap: 0.5rem;
-      }
-
-      .combat-readout .last-hit-readout {
-        grid-column: 1 / -1;
+        flex-direction: column;
+        gap: 0.15rem;
       }
 
       .readout-value {
         overflow: hidden;
+        font-size: clamp(0.78rem, 1.8vw, 1rem);
         font-weight: 900;
         text-overflow: ellipsis;
         white-space: nowrap;
@@ -711,6 +708,10 @@
           padding-top: clamp(0.25rem, 2cqh, 0.45rem);
           font-size: clamp(0.48rem, min(3.3cqh, 3cqw), 0.62rem);
         }
+
+        .combat-readout .readout-value {
+          font-size: clamp(0.62rem, min(4.2cqh, 3.8cqw), 0.82rem);
+        }
       }
 
       @container controller-display (max-height: 11rem) {
@@ -782,6 +783,10 @@
           padding-top: 0.12rem;
           font-size: 0.42rem;
           line-height: 1.1;
+        }
+
+        .combat-readout .readout-value {
+          font-size: 0.55rem;
         }
       }
 
@@ -938,7 +943,6 @@
                 <div class="combat-readout" aria-live="polite">
                   <div><span>Time</span><span id="matchTimeValue" class="readout-value">180s</span></div>
                   <div><span>Weapon</span><span id="weaponCooldownValue" class="readout-value">Ready</span></div>
-                  <div class="last-hit-readout"><span>Last hit from</span><span id="lastHitValue" class="readout-value">No hits</span></div>
                 </div>
               </div>
             </section>
@@ -999,7 +1003,6 @@
       const healthValue = document.querySelector("#healthValue");
       const matchTimeValue = document.querySelector("#matchTimeValue");
       const weaponCooldownValue = document.querySelector("#weaponCooldownValue");
-      const lastHitValue = document.querySelector("#lastHitValue");
       const tankLinkIndicator = document.querySelector("#tankLinkIndicator");
       const tankLinkText = document.querySelector("#tankLinkText");
       const fireButton = document.querySelector("#fire");
@@ -1207,9 +1210,6 @@
         const healthPercent = Math.max(0, Math.min(100, health));
         healthFill.style.width = `${healthPercent}%`;
         healthValue.textContent = String(health);
-        lastHitValue.textContent = player?.lastHitDirection
-          ? formatHitDirection(player.lastHitDirection)
-          : "No hits";
       }
 
       function renderTankLink() {
@@ -1438,10 +1438,6 @@
       function setStatus(text, connected) {
         statusText.textContent = text;
         statusDot.classList.toggle("connected", connected);
-      }
-
-      function formatHitDirection(direction) {
-        return direction.replace(/[_-]+/g, " ");
       }
 
       function vibrate(pattern) {

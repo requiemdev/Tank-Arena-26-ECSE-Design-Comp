@@ -43,7 +43,7 @@ describe('HTTP implementation', () => {
     assert.match(response.body, /countdownScreen/);
     assert.match(response.body, /FIRE_COOLDOWN_MS = 2000/);
     assert.match(response.body, /tankLinkIndicator/);
-    assert.match(response.body, /lastHitValue/);
+    assert.doesNotMatch(response.body, /lastHitValue|Last hit from/);
   });
 
   it('starts countdown once and rejects duplicate start requests while in progress', async (t) => {
