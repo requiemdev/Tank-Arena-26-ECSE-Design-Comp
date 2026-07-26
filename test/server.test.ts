@@ -43,6 +43,8 @@ describe('HTTP implementation', () => {
     assert.match(response.body, /countdownScreen/);
     assert.match(response.body, /FIRE_COOLDOWN_MS = 2000/);
     assert.match(response.body, /tankLinkIndicator/);
+    assert.match(response.body, /<option value="p1">White Tank<\/option>/);
+    assert.match(response.body, /<option value="p2">Black Tank<\/option>/);
     assert.doesNotMatch(response.body, /lastHitValue|Last hit from/);
   });
 

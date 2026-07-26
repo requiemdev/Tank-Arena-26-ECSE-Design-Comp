@@ -905,8 +905,8 @@
               <label>
                 Player
                 <select id="player">
-                  <option value="p1">Player 1</option>
-                  <option value="p2">Player 2</option>
+                  <option value="p1">White Tank</option>
+                  <option value="p2">Black Tank</option>
                 </select>
               </label>
               <label>
@@ -949,11 +949,11 @@
 
             <section class="lobby-info" aria-live="polite">
               <div id="p1Card" class="player-card">
-                <strong>Player 1</strong>
+                <strong>White Tank</strong>
                 <div id="p1State" class="player-state">Open</div>
               </div>
               <div id="p2Card" class="player-card">
-                <strong>Player 2</strong>
+                <strong>Black Tank</strong>
                 <div id="p2State" class="player-state">Open</div>
               </div>
             </section>
@@ -1020,6 +1020,7 @@
       const defaultProtocol =
         window.location.protocol === "https:" ? "wss:" : "ws:";
       const serverUrl = `${defaultProtocol}//${window.location.host}/connect`;
+      const PLAYER_LABELS = { p1: "White Tank", p2: "Black Tank" };
       const FIRE_COOLDOWN_MS = 2000;
       const FIRE_VIBRATION_MS = 35;
       const HIT_VIBRATION_PATTERN = [200, 80, 200];
@@ -1146,8 +1147,8 @@
         }
 
         const { p1, p2 } = gameState.players;
-        p1StateText.textContent = formatPlayerState(p1);
-        p2StateText.textContent = formatPlayerState(p2);
+        p1StateText.textContent = formatPlayerState(p1, "p1");
+        p2StateText.textContent = formatPlayerState(p2, "p2");
         renderPlayerHealth();
         renderTankLink();
 
@@ -1159,7 +1160,7 @@
           matchTimeValue.textContent = `${gameState.remainingSeconds}s`;
         } else if (gameState.status === "ENDED") {
           matchStateText.textContent = gameState.winner
-            ? `${gameState.players[gameState.winner].username} wins`
+            ? `${formatPlayerName(gameState.players[gameState.winner], gameState.winner)} wins`
             : "Match ended in a draw";
         } else {
           matchStateText.textContent = bothReady()
@@ -1184,11 +1185,18 @@
         updateControls();
       }
 
-      function formatPlayerState(player) {
+      function formatPlayerState(player, playerSlot) {
         const connection = player.controllerConnected ? "Locked" : "Open";
         const ready = player.ready ? "Ready" : "Not ready";
         const tank = player.tankConnected ? "tank online" : "tank offline";
-        return `${player.username}: ${connection}, ${ready}, ${tank}`;
+        return `${formatPlayerName(player, playerSlot)}: ${connection}, ${ready}, ${tank}`;
+      }
+
+      function formatPlayerName(player, playerSlot) {
+        const backendDefaultName = playerSlot === "p1" ? "Player 1" : "Player 2";
+        return player.username === backendDefaultName
+          ? PLAYER_LABELS[playerSlot]
+          : player.username;
       }
 
       function renderPlayerHealth() {
@@ -1223,7 +1231,7 @@
         for (const option of playerInput.options) {
           const player = gameState.players[option.value];
           option.disabled = false;
-          option.textContent = `${option.value === "p1" ? "Player 1" : "Player 2"}${
+          option.textContent = `${PLAYER_LABELS[option.value]}${
             player.controllerConnected ? " (locked)" : ""
           }`;
         }
