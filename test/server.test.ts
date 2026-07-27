@@ -48,6 +48,74 @@ describe('HTTP implementation', () => {
     assert.doesNotMatch(response.body, /lastHitValue|Last hit from/);
   });
 
+  it('serves the live spectator matchup view', async (t) => {
+    const app = buildServer({ logger: false });
+    t.after(async () => {
+      await app.close();
+    });
+
+    const response = await app.inject({
+      method: 'GET',
+      url: '/spectator'
+    });
+
+    assert.equal(response.statusCode, 200);
+    assert.match(response.headers['content-type'] as string, /text\/html/);
+    assert.match(response.body, /ECSE Tank Arena/);
+    assert.match(response.body, /White Tank/);
+    assert.match(response.body, /Black Tank/);
+    assert.match(response.body, /Hull integrity/);
+    assert.match(response.body, /Time remaining/);
+    assert.match(response.body, /connect\?type=spectator/);
+    assert.match(response.body, /state\.remainingSeconds/);
+  });
+
+  it('serves a fastest-games leaderboard without a date column', async (t) => {
+    const app = buildServer({ logger: false });
+    t.after(async () => {
+      await app.close();
+    });
+
+    const response = await app.inject({
+      method: 'GET',
+      url: '/leaderboard'
+    });
+
+    assert.equal(response.statusCode, 200);
+    assert.match(response.headers['content-type'] as string, /text\/html/);
+    assert.match(response.body, /Tank Arena Leaderboard/);
+    assert.match(response.body, /<th scope="col">Players<\/th>/);
+    assert.match(response.body, /<th scope="col">Winner<\/th>/);
+    assert.match(response.body, /<th scope="col">Score<\/th>/);
+    assert.match(response.body, /<th scope="col">Game duration<\/th>/);
+    assert.match(response.body, /game_duration_seconds/);
+    assert.doesNotMatch(response.body, /<th[^>]*>Date<\/th>|created_at/);
+  });
+
+  it('returns an empty leaderboard when Supabase is not configured', async (t) => {
+    const originalUrl = process.env.SUPABASE_URL;
+    const originalServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    delete process.env.SUPABASE_URL;
+    delete process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+    const app = buildServer({ logger: false });
+    t.after(async () => {
+      if (originalUrl === undefined) delete process.env.SUPABASE_URL;
+      else process.env.SUPABASE_URL = originalUrl;
+      if (originalServiceRoleKey === undefined) delete process.env.SUPABASE_SERVICE_ROLE_KEY;
+      else process.env.SUPABASE_SERVICE_ROLE_KEY = originalServiceRoleKey;
+      await app.close();
+    });
+
+    const response = await app.inject({
+      method: 'GET',
+      url: '/api/leaderboard'
+    });
+
+    assert.equal(response.statusCode, 200);
+    assert.deepEqual(response.json(), []);
+  });
+
   it('starts countdown once and rejects duplicate start requests while in progress', async (t) => {
     const engine = new GameEngine();
     const app = buildServer({ gameEngine: engine, logger: false });
@@ -112,15 +180,15 @@ describe('HTTP implementation', () => {
 
     await waitForOpen(tankSocket);
     tankSocket.send(JSON.stringify({ type: 'hit', direction: 'front' }));
-    await waitUntil(() => engine.getPublicState().players.p2.health === 90);
+    await waitUntil(() => engine.getPublicState().players.p2.health === 80);
     const removedEndpointResponse = await app.inject({
       method: 'POST',
       url: '/hit/p2'
     });
 
-    assert.equal(engine.getPublicState().players.p2.health, 90);
+    assert.equal(engine.getPublicState().players.p2.health, 80);
     assert.equal(engine.getPublicState().players.p2.lastHitDirection, 'front');
-    assert.equal(engine.getPublicState().players.p1.score, 10);
+    assert.equal(engine.getPublicState().players.p1.score, 20);
     assert.equal(removedEndpointResponse.statusCode, 404);
   });
 

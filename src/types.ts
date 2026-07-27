@@ -45,6 +45,7 @@ export interface MatchResult {
   winner_name: string;
   player1_score: number;
   player2_score: number;
+  game_duration_seconds: number;
   created_at: string;
 }
 

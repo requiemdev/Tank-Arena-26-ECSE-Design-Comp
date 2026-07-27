@@ -22,15 +22,25 @@ db.exec(`
     winner_name TEXT NOT NULL,
     player1_score INTEGER NOT NULL,
     player2_score INTEGER NOT NULL,
+    game_duration_seconds INTEGER NOT NULL,
     created_at TEXT NOT NULL
   )
 `);
+
+const pendingMatchColumns = db.pragma('table_info(pending_matches)') as Array<{ name: string }>;
+if (!pendingMatchColumns.some((column) => column.name === 'game_duration_seconds')) {
+  db.exec(`
+    ALTER TABLE pending_matches
+    ADD COLUMN game_duration_seconds INTEGER
+  `);
+}
 
 const insertMatch = db.prepare<[
   string,
   string,
   string,
   string,
+  number,
   number,
   number,
   string
@@ -42,9 +52,10 @@ const insertMatch = db.prepare<[
     winner_name,
     player1_score,
     player2_score,
+    game_duration_seconds,
     created_at
   )
-  VALUES (?, ?, ?, ?, ?, ?, ?)
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?)
 `);
 
 const selectOldest = db.prepare<[], MatchResult>(`
@@ -55,8 +66,11 @@ const selectOldest = db.prepare<[], MatchResult>(`
     winner_name,
     player1_score,
     player2_score,
+    game_duration_seconds,
     created_at
   FROM pending_matches
+  WHERE winner_name <> 'draw'
+    AND game_duration_seconds IS NOT NULL
   ORDER BY created_at ASC
   LIMIT 1
 `);
@@ -75,6 +89,7 @@ export function enqueueMatchResult(matchData: MatchResult): void {
     matchData.winner_name,
     matchData.player1_score,
     matchData.player2_score,
+    matchData.game_duration_seconds,
     matchData.created_at
   );
 }
@@ -160,6 +175,7 @@ async function insertLeaderboardRow(supabase: SupabaseClient, matchData: MatchRe
         winner_name: matchData.winner_name,
         player1_score: matchData.player1_score,
         player2_score: matchData.player2_score,
+        game_duration_seconds: matchData.game_duration_seconds,
         created_at: matchData.created_at
       })
       .abortSignal(abortController.signal);

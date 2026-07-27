@@ -20,6 +20,11 @@
 
       * {
         box-sizing: border-box;
+        -webkit-tap-highlight-color: transparent;
+        -webkit-touch-callout: none;
+        -webkit-user-drag: none;
+        -webkit-user-select: none;
+        user-select: none;
       }
 
       body {
@@ -470,7 +475,6 @@
         display: grid;
         place-items: center;
         touch-action: none;
-        user-select: none;
       }
 
       #joystick {
@@ -1035,6 +1039,8 @@
       let gameState;
       let joystick;
       let fallbackJoystickReady = false;
+      let activeJoystickPointerId = null;
+      let activeJoystickTouchId = null;
       const heldTurns = [];
       const lastRenderedHealth = { p1: undefined, p2: undefined };
 
@@ -1056,6 +1062,7 @@
       bindFireButton();
       bindTurnButton(leftButton, "left");
       bindTurnButton(rightButton, "right");
+      bindJoystickGestureGuards();
       window.addEventListener("resize", resetJoystick);
       playerInput.addEventListener("change", renderState);
 
@@ -1379,6 +1386,92 @@
         joystick.on("end", stopMoving);
       }
 
+      function bindJoystickGestureGuards() {
+        const preventNativeGesture = (event) => event.preventDefault();
+
+        document.addEventListener("selectstart", preventNativeGesture);
+        document.addEventListener("dragstart", preventNativeGesture);
+        document.addEventListener("contextmenu", (event) => {
+          event.preventDefault();
+          if (isJoystickGestureActive()) {
+            cancelJoystickGesture();
+          }
+        });
+        joystickZone.addEventListener(
+          "pointerdown",
+          (event) => {
+            activeJoystickPointerId = event.pointerId;
+            event.preventDefault();
+          },
+          true,
+        );
+        joystickZone.addEventListener(
+          "touchstart",
+          (event) => {
+            activeJoystickTouchId ??= event.changedTouches[0]?.identifier ?? null;
+            event.preventDefault();
+          },
+          { capture: true, passive: false },
+        );
+
+        document.addEventListener("pointerup", releaseJoystickPointer, true);
+        document.addEventListener("pointercancel", releaseJoystickPointer, true);
+        document.addEventListener("touchend", releaseJoystickTouch, true);
+        document.addEventListener("touchcancel", releaseJoystickTouch, true);
+        document.addEventListener("selectionchange", handleJoystickSelection);
+        document.addEventListener("visibilitychange", () => {
+          if (document.hidden) {
+            cancelJoystickGesture();
+          }
+        });
+        window.addEventListener("blur", cancelJoystickGesture);
+        window.addEventListener("pagehide", cancelJoystickGesture);
+      }
+
+      function releaseJoystickPointer(event) {
+        if (event.pointerId !== activeJoystickPointerId) {
+          return;
+        }
+
+        activeJoystickPointerId = null;
+        stopMoving();
+      }
+
+      function releaseJoystickTouch(event) {
+        const activeTouchEnded = Array.from(event.changedTouches).some(
+          (touch) => touch.identifier === activeJoystickTouchId,
+        );
+        if (!activeTouchEnded) {
+          return;
+        }
+
+        activeJoystickTouchId = null;
+        stopMoving();
+      }
+
+      function handleJoystickSelection() {
+        const selection = window.getSelection();
+        if (!selection || selection.isCollapsed) {
+          return;
+        }
+
+        selection.removeAllRanges();
+        if (isJoystickGestureActive()) {
+          cancelJoystickGesture();
+        }
+      }
+
+      function isJoystickGestureActive() {
+        return activeJoystickPointerId !== null || activeJoystickTouchId !== null;
+      }
+
+      function cancelJoystickGesture() {
+        activeJoystickPointerId = null;
+        activeJoystickTouchId = null;
+        stopMoving();
+        resetJoystick();
+      }
+
       function resetJoystick() {
         syncJoystickDimensions();
         if (!joystick) {
@@ -1412,6 +1505,9 @@
       }
 
       function teardownJoystick() {
+        activeJoystickPointerId = null;
+        activeJoystickTouchId = null;
+
         if (joystick) {
           joystick.destroy();
           joystick = null;
@@ -1440,6 +1536,7 @@
 
       function stopMoving() {
         latest = { ...latest, throttle: 0, steering: 0 };
+        joystick?.get?.()?.setPosition?.(undefined, { x: 0, y: 0 });
         sendInput();
       }
 

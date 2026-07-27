@@ -3,6 +3,7 @@
 MVP for a local-router tank game:
 
 - Browser controller at `http://<router-ip>:8080/controller`
+- Live spectator display at `http://<router-ip>:8080/spectator`
 - WebSocket edge route at `ws://<router-ip>:8080/connect`
 - Robot client connects as a tank and receives normalized `{ throttle, steering, fire, left, right, seq, ts }` commands
 - Match results queue locally in SQLite and sync to Supabase when internet is available
@@ -15,7 +16,8 @@ cp .env.example .env
 npm run dev
 ```
 
-Open `http://<router-ip>:8080/controller` from a phone or laptop on the same Wi-Fi.
+Open `http://<router-ip>:8080/controller` from each player's phone or laptop on the same Wi-Fi.
+Open `http://<router-ip>:8080/spectator` on the shared display for the live VS view.
 
 On Windows PowerShell, create the local `.env` file with:
 
@@ -42,6 +44,7 @@ Create the leaderboard table before enabling cloud sync:
 3. Run `supabase/schema.sql`.
 
 Set `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` in `.env`. Match results stay in local SQLite until Supabase sync succeeds.
+Only matches with a winner are added to the leaderboard. The leaderboard ranks those matches by shortest game duration; legacy rows without a recorded duration are retained but not shown.
 
 ## Connect a Robot
 

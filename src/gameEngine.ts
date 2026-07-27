@@ -53,16 +53,13 @@ export class GameEngine {
     return this.state;
   }
 
-  attachTank(player: PlayerSlot, socket: WebSocket, username?: string): boolean {
+  attachTank(player: PlayerSlot, socket: WebSocket, _deviceName?: string): boolean {
     const existingSocket = this.state.players[player].socket;
     if (existingSocket && existingSocket.readyState === WebSocket.OPEN) {
       return false;
     }
 
     this.state.players[player].socket = socket;
-    if (username) {
-      this.state.players[player].username = username;
-    }
     this.broadcastState();
     return true;
   }
@@ -265,7 +262,8 @@ export class GameEngine {
   }
 
   private queueResult(): void {
-    if (this.resultQueued) {
+    const winner = this.state.winner;
+    if (this.resultQueued || !winner) {
       return;
     }
 
@@ -274,9 +272,10 @@ export class GameEngine {
       id: this.state.matchId,
       player1_name: this.state.players.p1.username,
       player2_name: this.state.players.p2.username,
-      winner_name: this.state.winner ? this.state.players[this.state.winner].username : 'draw',
+      winner_name: this.state.players[winner].username,
       player1_score: this.state.players.p1.score,
       player2_score: this.state.players.p2.score,
+      game_duration_seconds: Math.max(1, this.matchSeconds - this.state.remainingSeconds),
       created_at: new Date().toISOString()
     };
 

@@ -31,7 +31,7 @@ describe('GameEngine', () => {
       matchId: engine.getState().matchId,
       status: 'LOBBY',
       countdownSeconds: 0,
-      remainingSeconds: 180,
+      remainingSeconds: 120,
       winner: null,
       players: {
         p1: {
@@ -56,6 +56,31 @@ describe('GameEngine', () => {
         }
       }
     });
+  });
+
+  it('pushes the current state and live hit updates to spectators', () => {
+    const engine = new GameEngine();
+    const spectator = createOpenSocket();
+
+    engine.addSpectator(spectator);
+
+    const initialMessage = JSON.parse(spectator.sent[0] ?? '{}');
+    assert.equal(initialMessage.type, 'state');
+    assert.equal(initialMessage.state.status, 'LOBBY');
+    assert.equal(initialMessage.state.players.p2.health, 100);
+
+    engine.getState().status = 'ACTIVE';
+    engine.registerHit('p2');
+
+    const hitMessage = JSON.parse(spectator.sent[1] ?? '{}');
+    assert.equal(hitMessage.type, 'state');
+    assert.equal(hitMessage.state.status, 'ACTIVE');
+    assert.equal(hitMessage.state.players.p2.health, 80);
+    assert.equal(hitMessage.state.remainingSeconds, 120);
+
+    engine.removeSpectator(spectator);
+    engine.registerHit('p2');
+    assert.equal(spectator.sent.length, 2);
   });
 
   it('forwards valid active controller input to the matching tank only', () => {
@@ -125,8 +150,9 @@ describe('GameEngine', () => {
     state.players.p2.username = 'Grace';
     state.players.p1.ready = true;
     state.players.p2.ready = true;
+    state.remainingSeconds = 87;
 
-    for (let hit = 0; hit < 10; hit += 1) {
+    for (let hit = 0; hit < 5; hit += 1) {
       engine.registerHit('p2');
     }
 
@@ -144,7 +170,8 @@ describe('GameEngine', () => {
         player2_name: results[0]?.player2_name,
         winner_name: results[0]?.winner_name,
         player1_score: results[0]?.player1_score,
-        player2_score: results[0]?.player2_score
+        player2_score: results[0]?.player2_score,
+        game_duration_seconds: results[0]?.game_duration_seconds
       },
       {
         id: engine.getState().matchId,
@@ -152,7 +179,8 @@ describe('GameEngine', () => {
         player2_name: 'Grace',
         winner_name: 'Ada',
         player1_score: 100,
-        player2_score: 0
+        player2_score: 0,
+        game_duration_seconds: 33
       }
     );
     assert.doesNotThrow(() => new Date(results[0]?.created_at ?? '').toISOString());
@@ -167,9 +195,9 @@ describe('GameEngine', () => {
 
     engine.registerHit('p2', 'rear-left');
 
-    assert.equal(engine.getPublicState().players.p2.health, 90);
+    assert.equal(engine.getPublicState().players.p2.health, 80);
     assert.equal(engine.getPublicState().players.p2.lastHitDirection, 'rear-left');
-    assert.equal(engine.getPublicState().players.p1.score, 10);
+    assert.equal(engine.getPublicState().players.p1.score, 20);
   });
 
   it('resets match stats while preserving attached clients and usernames', () => {
@@ -178,8 +206,8 @@ describe('GameEngine', () => {
     const controller = createOpenSocket();
     const firstMatchId = engine.getState().matchId;
 
-    engine.attachTank('p1', tank, 'Ada');
-    engine.attachController('p1', controller);
+    engine.attachTank('p1', tank);
+    engine.attachController('p1', controller, 'Ada');
     engine.getState().status = 'ACTIVE';
     engine.getState().players.p1.score = 20;
     engine.getState().players.p1.health = 70;
@@ -196,6 +224,17 @@ describe('GameEngine', () => {
     assert.equal(publicState.players.p1.ready, false);
     assert.equal(publicState.players.p1.tankConnected, true);
     assert.equal(publicState.players.p1.controllerConnected, true);
+  });
+
+  it('keeps the controller player name when a tank supplies a device name', () => {
+    const engine = new GameEngine();
+    const controller = createOpenSocket();
+    const tank = createOpenSocket();
+
+    engine.attachController('p1', controller, 'Ada');
+    engine.attachTank('p1', tank, 'esp32-tank');
+
+    assert.equal(engine.getPublicState().players.p1.username, 'Ada');
   });
 
   it('automatically starts countdown once both connected controllers are ready', () => {
@@ -240,6 +279,20 @@ describe('GameEngine', () => {
     assert.equal(publicState.players.p1.ready, false);
     assert.equal(publicState.players.p2.controllerConnected, true);
     assert.equal(publicState.players.p2.ready, false);
+    assert.equal(results.length, 0);
+  });
+
+  it('does not queue an active match that ends without a winner', () => {
+    const results: MatchResult[] = [];
+    const engine = new GameEngine((result) => {
+      results.push(result);
+    });
+
+    engine.getState().status = 'ACTIVE';
+    engine.disconnectController('p1');
+
+    assert.equal(engine.getPublicState().status, 'ENDED');
+    assert.equal(engine.getPublicState().winner, null);
     assert.equal(results.length, 0);
   });
 
