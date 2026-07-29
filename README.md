@@ -32,7 +32,7 @@ The game lifecycle is explicitly modelled as `LOBBY → COUNTDOWN → ACTIVE →
 
 ## Engineering highlights
 
-- **Embedded systems:** ESP32 firmware for Wi-Fi, WebSocket communication, motor control, laser firing, hit sensing, and watchdog/reconnect behaviour.
+- **Embedded systems:** ESP32 firmware for Wi-Fi, WebSocket communication, watchdog/reconnect behaviour, String parsing to encode/decode messages from server, interrupt handling for hit sensing, PWM outputs(For motor control and  IR emitter firing).
 - **Real-time networking:** Persistent WebSocket connections for low-latency control and event delivery.
 - **Authoritative game logic:** Server-side validation prevents the browser from directly deciding hits, health, scores, or winners.
 - **Resilient operation:** Connection lifecycle handling, safe match termination, local SQLite queueing, and deferred cloud synchronization support unreliable competition-day networks.
@@ -44,6 +44,7 @@ The game lifecycle is explicitly modelled as `LOBBY → COUNTDOWN → ACTIVE →
 - [3D_Print](./3D_Print) — STL files for the tank body and supporting parts. The rigid components were printed in PLA; the wheel tracks were printed in flexible TPU.
 - [Firmware](./Firmware) — ESP32 firmware for tank control, sensing, firing, and communication with the game server.
 - [LTspice](./LTspice) — circuit simulations and supporting electrical-design work.
+- [Altium](./dc_p3_t11) — PCB design for circuit.
 
 ## Software stack
 
@@ -54,7 +55,7 @@ The game lifecycle is explicitly modelled as `LOBBY → COUNTDOWN → ACTIVE →
 | Player interface | HTML, CSS, JavaScript, responsive mobile UI |
 | Persistence | SQLite offline queue, Supabase leaderboard |
 | Mechanical design | 3D printing with PLA and TPU |
-| Electrical design | LTspice |
+| Electrical design | Altium, LTspice |
 
 ## Running the software locally
 
