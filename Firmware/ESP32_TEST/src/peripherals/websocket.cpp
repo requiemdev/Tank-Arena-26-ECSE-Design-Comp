@@ -1,0 +1,157 @@
+#include "websocket.h"
+
+#include "global_config.h"
+
+// ============================================================================
+// WIFI CONFIG
+// ============================================================================
+#define WIFI_SSID "TankRouter"
+#define WIFI_PASSWORD "WeLoveTanksPewPew"
+
+#define SERVER_HOST "192.168.1.67"
+#define SERVER_PORT 8080
+#define ROBOT_NAME "esp32-tank"
+
+WebSocketsClient webSocket;
+
+void websocket_init(){
+    Serial.begin(115200);
+    delay(500);
+
+    Serial.println();
+    Serial.println("ESP32 tank listener starting");
+
+    connectWiFi();
+    configureWebSocket();   
+}
+
+void websocket_loop() {
+  webSocket.loop();
+
+  if (WiFi.status() != WL_CONNECTED) {
+    Serial.println("[wifi] disconnected; reconnecting");
+    connectWiFi();
+  }
+}
+
+void connectWiFi() {
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+
+  Serial.print("[wifi] connecting");
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+
+  Serial.println();
+  Serial.print("[wifi] connected: ");
+  Serial.println(WiFi.localIP());
+}
+
+void configureWebSocket() {
+  String path = "/connect?type=tank&player=";
+  path += PLAYER_SLOT;
+  path += "&username=";
+  path += ROBOT_NAME;
+
+  Serial.print("[ws] connecting to ws://");
+  Serial.print(SERVER_HOST);
+  Serial.print(":");
+  Serial.print(SERVER_PORT);
+  Serial.println(path);
+
+  webSocket.begin(SERVER_HOST, SERVER_PORT, path);
+  webSocket.onEvent(handleWebSocketEvent);
+  webSocket.setReconnectInterval(1000);
+  webSocket.enableHeartbeat(15000, 3000, 2);
+}
+
+void handleWebSocketEvent(WStype_t type, uint8_t *payload, size_t length) {
+  // Variable definiitions above which cannot go in switch case statements.
+  CommandReader reader = CommandReader(payload, length);
+  Command* command;
+
+  switch (type) {
+    case WStype_DISCONNECTED:
+      Serial.println("[ws] disconnected");
+      break;
+
+    case WStype_CONNECTED:
+      Serial.println("[ws] connected");
+      webSocket.sendTXT("{\"type\":\"tank-listener-online\"}", (size_t)31);
+      break;
+
+    case WStype_TEXT:
+      stopTimer(TimerNumber::COMMAND_TIMEOUT_TIMER);
+      Serial.print("[ws] message ");
+      Serial.print(length);
+      Serial.print(" bytes: ");
+      printPayload(payload, length);
+      Serial.println();
+      
+      // Read, execute and delete command instance formed.
+      command = reader.interpretPayload();
+      if (command != nullptr) {
+        command->execute();
+        delete command;
+      }
+      restartTimer(TimerNumber::COMMAND_TIMEOUT_TIMER);
+      break;
+
+    case WStype_BIN:
+      Serial.print("[ws] binary message ");
+      Serial.print(length);
+      Serial.println(" bytes");
+      break;
+
+    case WStype_ERROR:
+      Serial.print("[ws] error: ");
+      printPayload(payload, length);
+      Serial.println();
+      break;
+
+    case WStype_PING:
+      Serial.println("[ws] ping");
+      break;
+
+    case WStype_PONG:
+      Serial.println("[ws] pong");
+      break;
+
+    default:
+      break;
+  }
+}
+
+void printPayload(uint8_t *payload, size_t length) {
+  for (size_t i = 0; i < length; i += 1) {
+    Serial.write(payload[i]);
+  }
+}
+
+void sendSensorHitMessage(int8_t sensor) {
+  String* msg = new String("{\"type\":\"hit\",\"direction\":");
+  if (sensor == SensorDirection::FRONT) {
+    msg->concat("\"front\"}");
+  } else if (sensor == SensorDirection::LEFT) {
+    msg->concat("\"left\"}");
+  } else if (sensor == SensorDirection::BACK) {
+    msg->concat("\"back\"}");
+  } else if (sensor == SensorDirection::RIGHT) {
+    msg->concat("\"right\"}");
+  }
+
+  Serial.printf(msg->c_str());
+
+  #ifndef USE_TEST_CODE
+  sendMessageToServer(msg->c_str(), msg->length());
+  Serial.printf("Message sent!\n\n");
+  #endif // USE_TEST_CODE
+
+  delete msg;
+}
+
+void sendMessageToServer(const char* message, size_t length) {
+  webSocket.sendTXT(message, length);
+}

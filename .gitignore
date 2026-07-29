@@ -128,3 +128,10 @@ software/data/local_queue.db-*
 
 # Netlist
 *.net
+/Firmware/ESP32_TEST/build
+### Node / Runtime ###
+node_modules/
+dist/
+.env
+data/local_queue.db
+data/local_queue.db-*
