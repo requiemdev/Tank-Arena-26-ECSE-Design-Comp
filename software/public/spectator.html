@@ -1,0 +1,960 @@
+<!doctype html>
+<html lang="en" data-phase="loading">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#c4bebb" />
+    <meta
+      name="description"
+      content="Live retro match display for the ECSE tank arena."
+    />
+    <title>ECSE Tank Arena | Live Match</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --screen: #b8bd68;
+        --screen-dark: #8f9450;
+        --ink: #272929;
+        --shell: #c4bebb;
+        --shell-light: #dedad7;
+        --shell-shadow: #8f8987;
+        --control: #494786;
+        --danger: #9a2257;
+        --radius-inner: 0.35rem;
+        --radius-screen: 1.25rem;
+        --radius-shell: 3.5rem;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        min-width: 20rem;
+        min-height: 100%;
+        margin: 0;
+      }
+
+      body {
+        min-height: 100dvh;
+        display: grid;
+        place-items: center;
+        overflow: hidden;
+        padding: clamp(0.5rem, 2vw, 1.5rem);
+        background:
+          radial-gradient(circle at 50% 20%, rgba(196, 190, 187, 0.12), transparent 32rem),
+          var(--ink);
+        color: var(--ink);
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      }
+
+      .arena {
+        width: min(100%, 86rem);
+        height: min(94dvh, 54rem);
+        min-height: 32rem;
+      }
+
+      .console-shell {
+        position: relative;
+        isolation: isolate;
+        width: 100%;
+        height: 100%;
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr) auto;
+        overflow: hidden;
+        background:
+          radial-gradient(circle at 18% 4%, rgba(255, 255, 255, 0.45), transparent 17rem),
+          var(--shell);
+        border: clamp(0.2rem, 0.45vw, 0.4rem) solid var(--ink);
+        border-radius: var(--radius-shell) var(--radius-shell) 5rem 4rem;
+        box-shadow:
+          inset 0 -0.7rem 0 var(--shell-shadow),
+          0 1.25rem 3.25rem rgba(0, 0, 0, 0.32);
+      }
+
+      .topbar {
+        min-height: clamp(3.5rem, 8dvh, 5.25rem);
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        align-items: center;
+        gap: 1rem;
+        padding: clamp(0.8rem, 2vw, 1.35rem) clamp(1.25rem, 3.5vw, 3rem);
+      }
+
+      .brand {
+        margin: 0;
+        color: var(--control);
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: clamp(0.76rem, 1.35vw, 1.08rem);
+        font-style: italic;
+        font-weight: 900;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+      }
+
+      .connection {
+        justify-self: end;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: rgba(39, 41, 41, 0.68);
+        font-size: clamp(0.55rem, 0.95vw, 0.72rem);
+        font-weight: 900;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .connection-light {
+        width: 0.72rem;
+        height: 0.72rem;
+        flex: 0 0 auto;
+        background: var(--danger);
+        border: 0.12rem solid var(--ink);
+        border-radius: 50%;
+        box-shadow: inset 0.1rem 0.1rem 0 rgba(255, 255, 255, 0.2);
+      }
+
+      .connection[data-connected="true"] {
+        color: var(--ink);
+      }
+
+      .connection[data-connected="true"] .connection-light {
+        background: var(--screen);
+        box-shadow:
+          inset 0.1rem 0.1rem 0 rgba(255, 255, 255, 0.35),
+          0 0 0 0.12rem rgba(184, 189, 104, 0.4);
+      }
+
+      .screen-bezel {
+        min-height: 0;
+        margin-inline: clamp(1rem, 4vw, 4rem);
+        padding: clamp(0.65rem, 1.4vw, 1.1rem);
+        overflow: hidden;
+        background: var(--ink);
+        border: 0.16rem solid var(--ink);
+        border-radius: var(--radius-screen) var(--radius-screen) 2.6rem var(--radius-screen);
+        box-shadow:
+          inset 0.18rem 0.18rem 0 rgba(255, 255, 255, 0.08),
+          inset -0.2rem -0.2rem 0 rgba(0, 0, 0, 0.34),
+          0 0.38rem 0 rgba(255, 255, 255, 0.24);
+      }
+
+      .lcd {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        min-height: 0;
+        display: grid;
+        grid-template-rows: minmax(0, 1fr) auto;
+        overflow: hidden;
+        background:
+          repeating-linear-gradient(
+            0deg,
+            rgba(39, 41, 41, 0.035) 0 1px,
+            transparent 1px 4px
+          ),
+          var(--screen);
+        border: 0.18rem solid #5f6337;
+        border-radius: var(--radius-inner);
+        box-shadow:
+          inset 0.45rem 0.45rem 0 rgba(39, 41, 41, 0.14),
+          inset -0.22rem -0.22rem 0 rgba(255, 255, 255, 0.12);
+      }
+
+      .matchup {
+        min-height: 0;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(7.5rem, 16vw) minmax(0, 1fr);
+        align-items: center;
+        gap: clamp(0.75rem, 2vw, 2rem);
+        padding: clamp(1rem, 3.6vw, 3rem);
+      }
+
+      .player {
+        min-width: 0;
+        display: grid;
+        align-content: center;
+        gap: clamp(0.55rem, 1.5dvh, 1rem);
+      }
+
+      .player-two {
+        text-align: right;
+      }
+
+      .tank-label {
+        margin: 0;
+        font-size: clamp(0.58rem, 1vw, 0.78rem);
+        font-weight: 900;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .player-name {
+        min-height: 1em;
+        margin: 0;
+        overflow: hidden;
+        font-size: clamp(2rem, 4.8vw, 5.1rem);
+        font-weight: 900;
+        letter-spacing: -0.08em;
+        line-height: 0.9;
+        text-overflow: ellipsis;
+        text-transform: uppercase;
+        white-space: nowrap;
+      }
+
+      .health-heading {
+        display: flex;
+        align-items: end;
+        justify-content: space-between;
+        gap: 0.75rem;
+      }
+
+      .player-two .health-heading {
+        flex-direction: row-reverse;
+      }
+
+      .health-label {
+        padding-bottom: 0.15em;
+        font-size: clamp(0.54rem, 0.9vw, 0.7rem);
+        font-weight: 900;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+      }
+
+      .health-number {
+        font-size: clamp(1.7rem, 3.5vw, 3.8rem);
+        font-weight: 900;
+        letter-spacing: -0.08em;
+        line-height: 0.85;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .health-unit {
+        margin-left: 0.24em;
+        font-size: 0.3em;
+        letter-spacing: 0.03em;
+      }
+
+      .health-track {
+        position: relative;
+        height: clamp(1.2rem, 3.4dvh, 2.2rem);
+        overflow: hidden;
+        background: var(--screen-dark);
+        border: clamp(0.12rem, 0.25vw, 0.2rem) solid var(--ink);
+        border-radius: 0.18rem;
+        box-shadow: inset 0.16rem 0.16rem 0 rgba(39, 41, 41, 0.2);
+      }
+
+      .health-track::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background: repeating-linear-gradient(
+          90deg,
+          transparent 0 calc(20% - 2px),
+          var(--screen) calc(20% - 2px) 20%
+        );
+      }
+
+      .health-fill {
+        position: absolute;
+        inset: 0;
+        background: var(--ink);
+        transform: scaleX(1);
+        transform-origin: left center;
+        transition: transform 320ms steps(4, end), background-color 160ms ease;
+      }
+
+      .player-two .health-fill {
+        transform-origin: right center;
+      }
+
+      .player[data-health="critical"] .health-fill {
+        background: var(--danger);
+      }
+
+      .player[data-health="critical"] .health-number {
+        color: var(--danger);
+      }
+
+      .player-status {
+        min-height: 1.2em;
+        margin: 0;
+        overflow: hidden;
+        font-size: clamp(0.5rem, 0.82vw, 0.66rem);
+        font-weight: 800;
+        letter-spacing: 0.05em;
+        line-height: 1.25;
+        text-overflow: ellipsis;
+        text-transform: uppercase;
+        white-space: nowrap;
+      }
+
+      .match-core {
+        min-width: 0;
+        display: grid;
+        place-items: center;
+        align-content: center;
+        gap: clamp(0.4rem, 1.1dvh, 0.8rem);
+        text-align: center;
+      }
+
+      .phase-label {
+        min-height: 1.2em;
+        color: var(--danger);
+        font-size: clamp(0.52rem, 0.95vw, 0.72rem);
+        font-weight: 900;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+      }
+
+      .match-clock {
+        font-size: clamp(2rem, 4.6vw, 5rem);
+        font-weight: 900;
+        letter-spacing: -0.1em;
+        line-height: 0.9;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .clock-caption {
+        margin-top: -0.35em;
+        font-size: clamp(0.48rem, 0.8vw, 0.62rem);
+        font-weight: 900;
+        letter-spacing: 0.09em;
+        text-transform: uppercase;
+      }
+
+      .versus {
+        min-width: clamp(3.8rem, 6.5vw, 6rem);
+        padding: 0.42em 0.5em 0.5em;
+        background: var(--control);
+        color: var(--shell-light);
+        border: 0.18rem solid var(--ink);
+        border-radius: 0.35rem;
+        box-shadow: 0 0.28rem 0 var(--ink);
+        font-size: clamp(1rem, 2vw, 1.75rem);
+        font-style: italic;
+        font-weight: 900;
+        letter-spacing: -0.06em;
+        line-height: 1;
+        transform: skewX(-6deg);
+      }
+
+      .winner {
+        min-height: 1.2em;
+        font-size: clamp(0.58rem, 1vw, 0.8rem);
+        font-weight: 900;
+        letter-spacing: 0.08em;
+        line-height: 1.25;
+        text-transform: uppercase;
+      }
+
+      .arena-footer {
+        min-height: clamp(2.75rem, 7dvh, 4.25rem);
+        display: grid;
+        place-items: center;
+        padding: 0.65rem 1rem;
+        border-top: 0.16rem solid var(--ink);
+        text-align: center;
+      }
+
+      .announcement {
+        margin: 0;
+        font-size: clamp(0.6rem, 1.2vw, 0.9rem);
+        font-weight: 900;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+      }
+
+      .control-deck {
+        min-height: clamp(6rem, 15dvh, 8.25rem);
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        align-items: center;
+        padding: clamp(0.8rem, 2dvh, 1.35rem) clamp(2rem, 7vw, 6rem)
+          clamp(1.2rem, 3dvh, 2rem);
+      }
+
+      .dpad {
+        position: relative;
+        width: clamp(4rem, 8vw, 6rem);
+        aspect-ratio: 1;
+        justify-self: start;
+      }
+
+      .dpad::before,
+      .dpad::after {
+        content: "";
+        position: absolute;
+        inset: 33% 0;
+        background: var(--ink);
+        border-radius: 0.25rem;
+        box-shadow: inset 0.2rem 0.2rem 0 rgba(255, 255, 255, 0.08);
+      }
+
+      .dpad::after {
+        transform: rotate(90deg);
+      }
+
+      .action-cluster {
+        justify-self: end;
+        display: flex;
+        align-items: center;
+        gap: clamp(0.85rem, 2.2vw, 1.5rem);
+        transform: rotate(-12deg);
+      }
+
+      .action-button {
+        width: clamp(2.8rem, 5.5vw, 4.4rem);
+        aspect-ratio: 1;
+        display: grid;
+        place-items: center;
+        color: var(--shell-light);
+        border: 0.16rem solid var(--ink);
+        border-radius: 50%;
+        box-shadow:
+          inset 0.2rem 0.2rem 0 rgba(255, 255, 255, 0.15),
+          0.25rem 0.38rem 0 var(--ink);
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: clamp(0.62rem, 1vw, 0.78rem);
+        font-weight: 900;
+      }
+
+      .action-button-a {
+        background: var(--danger);
+      }
+
+      .action-button-b {
+        background: var(--control);
+      }
+
+      [data-phase="loading"] .player-name,
+      [data-phase="loading"] .health-number,
+      [data-phase="loading"] .match-clock {
+        color: transparent;
+        background: rgba(39, 41, 41, 0.16);
+        border-radius: 0.18rem;
+      }
+
+      [data-phase="loading"] .player-name {
+        width: 70%;
+      }
+
+      [data-phase="loading"] .player-two .player-name {
+        margin-left: auto;
+      }
+
+      [data-phase="ended"] .versus {
+        background: var(--ink);
+        color: var(--screen);
+      }
+
+      .player.took-hit {
+        animation: hit-shift 300ms steps(3, end);
+      }
+
+      [data-phase="countdown"] .match-clock {
+        color: var(--danger);
+        animation: countdown-blink 1s steps(2, end) infinite;
+      }
+
+      [data-phase="active"] .connection[data-connected="true"] .connection-light {
+        animation: live-pulse 1.4s steps(2, end) infinite;
+      }
+
+      @keyframes hit-shift {
+        0%,
+        100% {
+          opacity: 1;
+          transform: translateX(0);
+        }
+        50% {
+          opacity: 0.35;
+          transform: translateX(var(--hit-direction, -0.5rem));
+        }
+      }
+
+      @keyframes countdown-blink {
+        0%,
+        49% {
+          opacity: 1;
+        }
+        50%,
+        100% {
+          opacity: 0.35;
+        }
+      }
+
+      @keyframes live-pulse {
+        0%,
+        100% {
+          opacity: 0.45;
+        }
+        50% {
+          opacity: 1;
+        }
+      }
+
+      @media (max-width: 760px) {
+        body {
+          overflow: auto;
+          padding: 0;
+          background: var(--shell);
+        }
+
+        .arena {
+          width: 100%;
+          height: 100dvh;
+          min-height: 36rem;
+        }
+
+        .console-shell {
+          border: 0;
+          border-radius: 0;
+          box-shadow: none;
+        }
+
+        .topbar {
+          min-height: 3.4rem;
+          grid-template-columns: 1fr auto;
+          padding: 0.7rem 1rem;
+        }
+
+        .screen-bezel {
+          margin-inline: 0.75rem;
+          padding: 0.5rem;
+          border-radius: 0.8rem 0.8rem 1.65rem 0.8rem;
+        }
+
+        .matchup {
+          grid-template:
+            "p1" minmax(0, 1fr)
+            "core" auto
+            "p2" minmax(0, 1fr) /
+            minmax(0, 1fr);
+          gap: 0.45rem;
+          padding: 0.75rem 0.85rem;
+        }
+
+        .player {
+          gap: 0.35rem;
+        }
+
+        .player-one {
+          grid-area: p1;
+        }
+
+        .player-two {
+          grid-area: p2;
+        }
+
+        .match-core {
+          grid-area: core;
+          grid-template-columns: 1fr auto 1fr;
+          gap: 0.6rem;
+        }
+
+        .phase-label {
+          text-align: right;
+        }
+
+        .match-clock {
+          order: 3;
+          font-size: clamp(1.9rem, 11vw, 3rem);
+        }
+
+        .clock-caption,
+        .winner {
+          display: none;
+        }
+
+        .versus {
+          order: 2;
+          min-width: 2.9rem;
+          padding: 0.38em;
+          box-shadow: 0 0.18rem 0 var(--ink);
+        }
+
+        .phase-label {
+          order: 1;
+        }
+
+        .player-name {
+          font-size: clamp(2rem, 11vw, 3.5rem);
+        }
+
+        .health-number {
+          font-size: clamp(1.65rem, 8vw, 2.5rem);
+        }
+
+        .health-track {
+          height: clamp(1.05rem, 3.5dvh, 1.6rem);
+        }
+
+        .control-deck {
+          min-height: 5.4rem;
+          padding: 0.65rem 1.8rem 1rem;
+        }
+
+        .dpad {
+          width: 3.7rem;
+        }
+
+        .action-button {
+          width: 2.7rem;
+        }
+      }
+
+      @media (max-height: 620px) {
+        .control-deck {
+          display: none;
+        }
+
+        .topbar {
+          min-height: 3rem;
+          padding-block: 0.55rem;
+        }
+
+        .arena {
+          min-height: 28rem;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.01ms !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="arena">
+      <section class="console-shell" aria-label="ECSE spectator console">
+        <header class="topbar">
+          <h1 class="brand">ECSE Tank Arena</h1>
+          <div id="connection" class="connection" data-connected="false">
+            <span class="connection-light" aria-hidden="true"></span>
+            <span id="connectionText">Connecting</span>
+          </div>
+        </header>
+
+        <div class="screen-bezel">
+          <div class="lcd">
+            <section class="matchup" aria-label="Live player matchup">
+              <article
+                id="p1Panel"
+                class="player player-one"
+                data-health="normal"
+                style="--hit-direction: -0.5rem"
+              >
+                <p class="tank-label">White Tank</p>
+                <h2 id="p1Name" class="player-name">Loading</h2>
+                <div class="health-heading">
+                  <span class="health-label">Hull integrity</span>
+                  <span class="health-number"><span id="p1Health">--</span><span class="health-unit">HP</span></span>
+                </div>
+                <div
+                  id="p1HealthTrack"
+                  class="health-track"
+                  role="progressbar"
+                  aria-label="White Tank health"
+                  aria-valuemin="0"
+                  aria-valuemax="100"
+                  aria-valuenow="100"
+                >
+                  <div id="p1HealthFill" class="health-fill"></div>
+                </div>
+                <p id="p1Status" class="player-status">Waiting for state</p>
+              </article>
+
+              <section class="match-core" aria-label="Match timer and status">
+                <div id="phaseLabel" class="phase-label">Connecting</div>
+                <time id="matchClock" class="match-clock" datetime="PT0S">--:--</time>
+                <div class="clock-caption">Time remaining</div>
+                <div class="versus" aria-label="versus">VS</div>
+                <div id="winner" class="winner"></div>
+              </section>
+
+              <article
+                id="p2Panel"
+                class="player player-two"
+                data-health="normal"
+                style="--hit-direction: 0.5rem"
+              >
+                <p class="tank-label">Black Tank</p>
+                <h2 id="p2Name" class="player-name">Loading</h2>
+                <div class="health-heading">
+                  <span class="health-label">Hull integrity</span>
+                  <span class="health-number"><span id="p2Health">--</span><span class="health-unit">HP</span></span>
+                </div>
+                <div
+                  id="p2HealthTrack"
+                  class="health-track"
+                  role="progressbar"
+                  aria-label="Black Tank health"
+                  aria-valuemin="0"
+                  aria-valuemax="100"
+                  aria-valuenow="100"
+                >
+                  <div id="p2HealthFill" class="health-fill"></div>
+                </div>
+                <p id="p2Status" class="player-status">Waiting for state</p>
+              </article>
+            </section>
+
+            <footer class="arena-footer" aria-live="polite" aria-atomic="true">
+              <p id="announcement" class="announcement">Connecting to the arena</p>
+            </footer>
+          </div>
+        </div>
+
+        <div class="control-deck" aria-hidden="true">
+          <div class="dpad"></div>
+          <div class="action-cluster">
+            <span class="action-button action-button-b">B</span>
+            <span class="action-button action-button-a">A</span>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      const elements = {
+        connection: document.querySelector("#connection"),
+        connectionText: document.querySelector("#connectionText"),
+        phaseLabel: document.querySelector("#phaseLabel"),
+        matchClock: document.querySelector("#matchClock"),
+        winner: document.querySelector("#winner"),
+        announcement: document.querySelector("#announcement"),
+        p1: {
+          panel: document.querySelector("#p1Panel"),
+          name: document.querySelector("#p1Name"),
+          health: document.querySelector("#p1Health"),
+          healthTrack: document.querySelector("#p1HealthTrack"),
+          healthFill: document.querySelector("#p1HealthFill"),
+          status: document.querySelector("#p1Status")
+        },
+        p2: {
+          panel: document.querySelector("#p2Panel"),
+          name: document.querySelector("#p2Name"),
+          health: document.querySelector("#p2Health"),
+          healthTrack: document.querySelector("#p2HealthTrack"),
+          healthFill: document.querySelector("#p2HealthFill"),
+          status: document.querySelector("#p2Status")
+        }
+      };
+
+      const DEFAULT_PLAYER_NAMES = {
+        p1: "Player 1",
+        p2: "Player 2"
+      };
+      const socketProtocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+      const socketUrl = `${socketProtocol}//${window.location.host}/connect?type=spectator`;
+      const lastHealth = { p1: undefined, p2: undefined };
+
+      let socket;
+      let reconnectTimer;
+
+      function clampHealth(value) {
+        const health = Number(value);
+        return Number.isFinite(health) ? Math.max(0, Math.min(100, health)) : 0;
+      }
+
+      function formatTime(totalSeconds) {
+        const safeSeconds = Math.max(0, Math.floor(Number(totalSeconds) || 0));
+        const minutes = Math.floor(safeSeconds / 60);
+        const seconds = String(safeSeconds % 60).padStart(2, "0");
+        return `${String(minutes).padStart(2, "0")}:${seconds}`;
+      }
+
+      function playerConnectionText(player) {
+        if (player.controllerConnected && player.tankConnected) {
+          return player.ready ? "Pilot ready, tank online" : "Pilot connected, tank online";
+        }
+
+        if (player.controllerConnected) {
+          return "Pilot connected, tank offline";
+        }
+
+        if (player.tankConnected) {
+          return "Tank online, waiting for pilot";
+        }
+
+        return "Waiting for pilot and tank";
+      }
+
+      function displayPlayerName(slot, name) {
+        const normalizedName = String(name || "").trim();
+        if (!normalizedName || /^esp32[-_ ]?tank$/i.test(normalizedName)) {
+          return DEFAULT_PLAYER_NAMES[slot];
+        }
+
+        return normalizedName;
+      }
+
+      function renderPlayer(slot, player) {
+        const view = elements[slot];
+        const health = clampHealth(player.health);
+
+        view.name.textContent = displayPlayerName(slot, player.username);
+        view.health.textContent = String(health);
+        view.healthFill.style.transform = `scaleX(${health / 100})`;
+        view.healthTrack.setAttribute("aria-valuenow", String(health));
+        view.panel.dataset.health = health <= 20 ? "critical" : "normal";
+        view.status.textContent = playerConnectionText(player);
+
+        if (lastHealth[slot] !== undefined && health < lastHealth[slot]) {
+          view.panel.classList.remove("took-hit");
+          void view.panel.offsetWidth;
+          view.panel.classList.add("took-hit");
+        }
+
+        lastHealth[slot] = health;
+      }
+
+      function waitingForPlayers(state) {
+        const waiting = Object.entries(state.players)
+          .filter(([, player]) => !player.ready)
+          .map(([slot, player]) => displayPlayerName(slot, player.username));
+
+        if (waiting.length === 0) {
+          return "Both pilots ready";
+        }
+
+        return `Waiting for ${waiting.join(" and ")}`;
+      }
+
+      function renderMatchState(state) {
+        let timerSeconds = state.remainingSeconds;
+        let phase = "Waiting";
+        let announcement = waitingForPlayers(state);
+        let winnerText = "";
+
+        if (state.status === "COUNTDOWN") {
+          timerSeconds = state.countdownSeconds;
+          phase = "Match starts in";
+          announcement = `Battle begins in ${state.countdownSeconds}`;
+        } else if (state.status === "ACTIVE") {
+          phase = "Match live";
+          announcement = "Match in progress";
+        } else if (state.status === "ENDED") {
+          phase = "Match complete";
+          if (state.winner && state.players[state.winner]) {
+            const winnerName = displayPlayerName(
+              state.winner,
+              state.players[state.winner].username
+            );
+            winnerText = `${winnerName} wins`;
+            announcement = winnerText;
+          } else {
+            winnerText = "Draw";
+            announcement = "Match ends in a draw";
+          }
+        }
+
+        document.documentElement.dataset.phase = state.status.toLowerCase();
+        elements.phaseLabel.textContent = phase;
+        elements.matchClock.textContent = formatTime(timerSeconds);
+        elements.matchClock.dateTime = `PT${Math.max(0, Math.floor(Number(timerSeconds) || 0))}S`;
+        elements.winner.textContent = winnerText;
+        elements.announcement.textContent = announcement;
+      }
+
+      function renderState(state) {
+        if (!state?.players?.p1 || !state?.players?.p2) {
+          return;
+        }
+
+        renderPlayer("p1", state.players.p1);
+        renderPlayer("p2", state.players.p2);
+        renderMatchState(state);
+      }
+
+      function setConnection(connected, label) {
+        elements.connection.dataset.connected = String(connected);
+        elements.connectionText.textContent = label;
+      }
+
+      async function requestState() {
+        try {
+          const response = await fetch("/state", {
+            headers: { accept: "application/json" },
+            cache: "no-store"
+          });
+
+          if (!response.ok) {
+            throw new Error(`State request failed with ${response.status}`);
+          }
+
+          renderState(await response.json());
+        } catch {
+          if (!socket || socket.readyState !== WebSocket.OPEN) {
+            setConnection(false, "Reconnecting");
+          }
+        }
+      }
+
+      function connectSpectator() {
+        window.clearTimeout(reconnectTimer);
+
+        if (
+          socket &&
+          (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING)
+        ) {
+          return;
+        }
+
+        setConnection(false, "Connecting");
+        socket = new WebSocket(socketUrl);
+
+        socket.addEventListener("open", () => {
+          setConnection(true, "Live");
+          socket.send(JSON.stringify({ type: "state" }));
+        });
+
+        socket.addEventListener("message", (event) => {
+          try {
+            const message = JSON.parse(event.data);
+            if (message?.type === "state") {
+              renderState(message.state);
+            }
+          } catch {
+            // Ignore malformed packets and keep the last valid arena state visible.
+          }
+        });
+
+        socket.addEventListener("close", () => {
+          setConnection(false, "Reconnecting");
+          void requestState();
+          reconnectTimer = window.setTimeout(connectSpectator, 1500);
+        });
+
+        socket.addEventListener("error", () => {
+          setConnection(false, "Connection lost");
+        });
+      }
+
+      window.setInterval(() => {
+        if (!socket || socket.readyState !== WebSocket.OPEN) {
+          void requestState();
+        }
+      }, 2000);
+
+      document.addEventListener("visibilitychange", () => {
+        if (!document.hidden) {
+          void requestState();
+          connectSpectator();
+        }
+      });
+
+      void requestState();
+      connectSpectator();
+    </script>
+  </body>
+</html>

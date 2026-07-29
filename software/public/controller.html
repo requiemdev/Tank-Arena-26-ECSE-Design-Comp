@@ -1,0 +1,1562 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ECSE Tank Controller</title>
+    <script src="https://cdn.jsdelivr.net/npm/nipplejs@0.10.2/dist/nipplejs.min.js"></script>
+    <style>
+      :root {
+        color-scheme: light;
+        --screen: #b8bd68;
+        --ink: #272929;
+        --shell: #c4bebb;
+        --control: #494786;
+        --danger: #9a2257;
+        --stick-size: clamp(6.5rem, min(18vw, 46dvh), 13rem);
+        --button-size: clamp(4.75rem, min(11vw, 24dvh), 7rem);
+        --action-gap: clamp(1.25rem, 3vw, 2.5rem);
+      }
+
+      * {
+        box-sizing: border-box;
+        -webkit-tap-highlight-color: transparent;
+        -webkit-touch-callout: none;
+        -webkit-user-drag: none;
+        -webkit-user-select: none;
+        user-select: none;
+      }
+
+      body {
+        width: 100dvw;
+        height: 100dvh;
+        margin: 0;
+        display: grid;
+        place-items: center;
+        padding: clamp(0.5rem, 2vw, 1.5rem);
+        overflow: hidden;
+        background: var(--ink);
+        color: var(--ink);
+        font-family:
+          ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+          monospace;
+      }
+
+      .controller-shell {
+        position: relative;
+        width: min(100%, 90rem);
+        height: min(92dvh, 48rem);
+        min-height: 0;
+        overflow: hidden;
+        display: grid;
+        grid-template:
+          "brand brand brand" auto
+          "move screen action" minmax(0, 1fr)
+          ". end-control ." auto /
+          minmax(7rem, 0.75fr) minmax(15rem, 1.65fr) minmax(8rem, 0.8fr);
+        gap: clamp(0.75rem, 2.4vw, 2.5rem);
+        align-items: center;
+        padding: clamp(1rem, 3vw, 2.75rem);
+        background:
+          radial-gradient(circle at 18% 12%, rgba(255, 255, 255, 0.55), transparent 16rem),
+          var(--shell);
+        border: clamp(0.2rem, 0.5vw, 0.45rem) solid var(--ink);
+        border-radius: 3.75rem 3.75rem 5rem 4rem / 3rem 3rem 4.25rem 4.25rem;
+        box-shadow:
+          inset 0 -0.65rem 0 rgba(39, 41, 41, 0.2),
+          0 1rem 2.5rem rgba(0, 0, 0, 0.32);
+      }
+
+      .controller-shell::after {
+        content: "";
+        position: absolute;
+        right: clamp(2rem, 5vw, 5rem);
+        bottom: clamp(0.75rem, 2.5dvh, 1.75rem);
+        width: clamp(5.5rem, 10vw, 9rem);
+        height: clamp(1rem, 4dvh, 2.25rem);
+        pointer-events: none;
+        background: repeating-linear-gradient(
+          105deg,
+          transparent 0 0.55rem,
+          rgba(39, 41, 41, 0.2) 0.55rem 0.72rem,
+          rgba(255, 255, 255, 0.32) 0.72rem 0.8rem,
+          transparent 0.8rem 1.35rem
+        );
+        border-radius: 0.25rem;
+        transform: skewX(-8deg);
+      }
+
+      .brand-strip {
+        grid-area: brand;
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        align-items: center;
+        gap: 1rem;
+        padding-inline: clamp(0.5rem, 2vw, 1.5rem);
+      }
+
+      .brand-mark {
+        margin: 0;
+        color: var(--control);
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: clamp(0.8rem, 1.6vw, 1.2rem);
+        font-weight: 900;
+        font-style: italic;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+      }
+
+      .brand-model {
+        grid-column: 3;
+        justify-self: end;
+        min-width: 0;
+        color: rgba(39, 41, 41, 0.66);
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: clamp(0.58rem, 1vw, 0.72rem);
+        font-weight: 700;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+      }
+
+      .tank-link-indicator {
+        grid-column: 2;
+        justify-self: center;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        color: rgba(39, 41, 41, 0.72);
+        font-size: clamp(0.54rem, 1vw, 0.68rem);
+        font-weight: 900;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .case-led {
+        width: 0.72rem;
+        height: 0.72rem;
+        background: #57212f;
+        border: 0.12rem solid var(--ink);
+        border-radius: 50%;
+        box-shadow: inset 0.12rem 0.12rem 0 rgba(255, 255, 255, 0.16);
+      }
+
+      .tank-link-indicator.online .case-led {
+        background: #65d86e;
+        box-shadow:
+          inset 0.12rem 0.12rem 0 rgba(255, 255, 255, 0.35),
+          0 0 0.55rem rgba(59, 209, 73, 0.9);
+      }
+
+      .move-deck,
+      .action-deck {
+        align-self: stretch;
+        display: grid;
+        align-content: center;
+        justify-items: center;
+        gap: clamp(0.65rem, 2dvh, 1.25rem);
+      }
+
+      .move-deck {
+        grid-area: move;
+      }
+
+      .action-deck {
+        grid-area: action;
+      }
+
+      .screen-bezel {
+        grid-area: screen;
+        align-self: stretch;
+        min-height: 0;
+        padding: clamp(0.75rem, 1.8vw, 1.35rem);
+        background: var(--ink);
+        border: 0.2rem solid var(--ink);
+        border-radius: 1.6rem 1.6rem 0.7rem 0.7rem;
+        box-shadow:
+          inset 0 0.2rem 0 rgba(255, 255, 255, 0.12),
+          0 0.55rem 0 rgba(39, 41, 41, 0.34);
+      }
+
+      .screen {
+        height: 100%;
+        min-height: 0;
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr);
+        overflow: hidden;
+        container-name: controller-display;
+        container-type: size;
+        background:
+          repeating-linear-gradient(
+            0deg,
+            rgba(39, 41, 41, 0.045) 0,
+            rgba(39, 41, 41, 0.045) 1px,
+            transparent 1px,
+            transparent 4px
+          ),
+          var(--screen);
+        border: 0.18rem solid var(--ink);
+        border-radius: 0.45rem;
+        box-shadow: inset 0 0 1.5rem rgba(39, 41, 41, 0.22);
+      }
+
+      .screen-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 0.75rem;
+        padding: clamp(0.65rem, 1.4vw, 1rem);
+        border-bottom: 0.16rem solid rgba(39, 41, 41, 0.7);
+      }
+
+      h1 {
+        margin: 0;
+        font-size: clamp(0.82rem, 1.7vw, 1.15rem);
+        font-weight: 900;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .screen-content {
+        min-height: 0;
+        overflow-x: hidden;
+        overflow-y: auto;
+        padding: clamp(0.7rem, 1.7vw, 1.2rem);
+        scrollbar-width: thin;
+      }
+
+      .status {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        font-size: clamp(0.56rem, 1.2vw, 0.72rem);
+        font-weight: 800;
+        white-space: nowrap;
+        text-transform: uppercase;
+      }
+
+      .dot {
+        width: 0.62rem;
+        height: 0.62rem;
+        flex: 0 0 auto;
+        background: var(--ink);
+        border: 0.12rem solid var(--ink);
+        border-radius: 50%;
+      }
+
+      .dot.connected {
+        background: var(--screen);
+        box-shadow: 0 0 0 0.12rem var(--ink), 0 0 0 0.26rem var(--screen);
+      }
+
+      #preGame {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: clamp(0.55rem, 1.4vw, 0.9rem);
+        align-items: end;
+      }
+
+      #preGame > div {
+        grid-column: 1 / -1;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: clamp(0.55rem, 1.4vw, 0.9rem);
+      }
+
+      #preGame > *,
+      #preGame > div > * {
+        min-width: 0;
+      }
+
+      label {
+        display: grid;
+        gap: 0.3rem;
+        font-size: clamp(0.58rem, 1.2vw, 0.7rem);
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      input,
+      select,
+      button {
+        font: inherit;
+      }
+
+      input,
+      select {
+        width: 100%;
+        min-height: clamp(2.25rem, 6dvh, 2.8rem);
+        padding: 0.55rem 0.7rem;
+        background: rgba(132, 208, 125, 0.35);
+        color: var(--ink);
+        border: 0.14rem solid var(--ink);
+        border-radius: 0.2rem;
+        outline: none;
+      }
+
+      button {
+        min-height: clamp(2.25rem, 6dvh, 2.8rem);
+        padding: 0.55rem 0.8rem;
+        color: #fff;
+        font-weight: 900;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        border: 0.16rem solid var(--ink);
+        border-radius: 0.3rem;
+        box-shadow: 0 0.28rem 0 var(--ink);
+        transition: transform 120ms ease, filter 120ms ease, box-shadow 120ms ease;
+      }
+
+      input:focus-visible,
+      select:focus-visible,
+      button:focus-visible {
+        outline: 0.2rem solid var(--control);
+        outline-offset: 0.18rem;
+      }
+
+      button:not(:disabled):hover {
+        filter: brightness(1.13);
+      }
+
+      button:not(:disabled):active {
+        transform: translateY(0.22rem);
+        box-shadow: 0 0.06rem 0 var(--ink);
+      }
+
+      .connect-key,
+      .ready-key {
+        background: var(--control);
+      }
+
+      .screen input,
+      .screen select {
+        background: var(--screen);
+      }
+
+      .screen .connect-key,
+      .screen .ready-key {
+        background: var(--ink);
+        color: var(--screen);
+      }
+
+      .screen input:focus-visible,
+      .screen select:focus-visible,
+      .screen button:focus-visible {
+        outline-color: var(--ink);
+      }
+
+      .screen button:not(:disabled):hover {
+        background: var(--screen);
+        color: var(--ink);
+        filter: none;
+      }
+
+      .lobby-info {
+        margin-top: clamp(0.65rem, 1.6vw, 1rem);
+      }
+
+      section.lobby-info {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.65rem;
+      }
+
+      .player-card {
+        min-width: 0;
+        padding: 0.65rem;
+        background: rgba(39, 41, 41, 0.09);
+        border: 0.12rem solid rgba(39, 41, 41, 0.65);
+      }
+
+      .player-card strong,
+      #matchState {
+        font-weight: 900;
+      }
+
+      .player-state {
+        margin-top: 0.25rem;
+        font-size: clamp(0.56rem, 1.15vw, 0.7rem);
+        line-height: 1.35;
+      }
+
+      #matchState {
+        padding-top: 0.65rem;
+        border-top: 0.14rem solid rgba(39, 41, 41, 0.6);
+        font-size: clamp(0.68rem, 1.4vw, 0.85rem);
+      }
+
+      #countdownScreen {
+        min-height: clamp(10rem, 43dvh, 22rem);
+        display: grid;
+        place-items: center;
+        text-align: center;
+      }
+
+      .countdown-number {
+        font-size: clamp(5rem, 18vw, 11rem);
+        font-weight: 900;
+        line-height: 0.85;
+        text-shadow: 0.24rem 0.24rem 0 rgba(39, 41, 41, 0.22);
+      }
+
+      .countdown-label {
+        margin-top: 0.8rem;
+        font-weight: 900;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      #inGame {
+        min-height: clamp(10rem, 43dvh, 22rem);
+        display: grid;
+        align-content: center;
+      }
+
+      .hud {
+        display: grid;
+        gap: clamp(0.55rem, 1.5vw, 0.9rem);
+      }
+
+      .hud-label {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 1rem;
+        font-size: clamp(0.72rem, 1.7vw, 1rem);
+        font-weight: 900;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+      }
+
+      .meter {
+        height: clamp(1rem, 3dvh, 1.45rem);
+        overflow: hidden;
+        border: 0.16rem solid var(--ink);
+        background: rgba(39, 41, 41, 0.14);
+      }
+
+      .meter-fill {
+        height: 100%;
+        background: var(--ink);
+        transition: width 180ms ease;
+      }
+
+      .combat-readout {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.4rem 0.8rem;
+        padding-top: clamp(0.45rem, 1.2vw, 0.75rem);
+        border-top: 0.14rem solid rgba(39, 41, 41, 0.6);
+        font-size: clamp(0.58rem, 1.25vw, 0.76rem);
+        font-weight: 800;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+
+      .combat-readout div {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0.15rem;
+      }
+
+      .readout-value {
+        overflow: hidden;
+        font-size: clamp(0.78rem, 1.8vw, 1rem);
+        font-weight: 900;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .pad {
+        position: relative;
+        width: var(--stick-size);
+        height: var(--stick-size);
+        display: grid;
+        place-items: center;
+        touch-action: none;
+      }
+
+      #joystick {
+        width: var(--joystick-outer-size, 72%);
+        aspect-ratio: 1;
+        position: relative;
+        pointer-events: none;
+        background: #737878;
+        border: 0;
+        border-radius: 50%;
+        box-shadow:
+          inset 0 0 0 clamp(0.2rem, 0.5vw, 0.42rem) var(--ink),
+          inset 0.35rem 0.45rem 0 rgba(255, 255, 255, 0.08),
+          0 0.5rem 0 rgba(39, 41, 41, 0.38);
+        transition: opacity 120ms ease;
+      }
+
+      #joystick::after,
+      .pad .nipple .front {
+        width: var(--joystick-inner-size, 6rem) !important;
+        height: var(--joystick-inner-size, 6rem) !important;
+        background: var(--ink) !important;
+        border: clamp(0.14rem, 0.35vw, 0.24rem) solid var(--shell) !important;
+        border-radius: 50% !important;
+        box-shadow:
+          inset 0.2rem 0.25rem 0 rgba(255, 255, 255, 0.12),
+          0 0 0 0.1rem var(--ink) !important;
+      }
+
+      #joystick::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+      }
+
+      .pad:has(.nipple) #joystick {
+        opacity: 1;
+      }
+
+      .pad:has(.nipple) #joystick::after {
+        opacity: 0;
+      }
+
+      .pad .nipple {
+        opacity: 1 !important;
+      }
+
+      .pad .nipple .back {
+        background: #737878 !important;
+        border: 0 !important;
+        opacity: 0 !important;
+        box-shadow:
+          inset 0 0 0 clamp(0.2rem, 0.5vw, 0.42rem) var(--ink),
+          inset 0.35rem 0.45rem 0 rgba(255, 255, 255, 0.08),
+          0 0.5rem 0 rgba(39, 41, 41, 0.38) !important;
+      }
+
+      .pad .nipple .front {
+        margin-top: calc(var(--joystick-inner-size, 6rem) / -2) !important;
+        margin-left: calc(var(--joystick-inner-size, 6rem) / -2) !important;
+        opacity: 1 !important;
+        z-index: 2 !important;
+      }
+
+      .actions {
+        display: grid;
+        grid-template-columns: repeat(2, var(--button-size));
+        gap: var(--action-gap);
+        justify-content: center;
+      }
+
+      .action-key {
+        width: var(--button-size);
+        min-height: 0;
+        aspect-ratio: 1;
+        display: grid;
+        place-items: center;
+        padding: 0;
+        text-align: center;
+        border-radius: 50%;
+        box-shadow:
+          inset 0.25rem 0.25rem 0 rgba(255, 255, 255, 0.14),
+          0.35rem 0.5rem 0 var(--ink);
+        touch-action: none;
+        user-select: none;
+      }
+
+      .action-key:not(:disabled):active {
+        transform: translateY(0.25rem);
+      }
+
+      .turn-key {
+        background: var(--control);
+      }
+
+      .turn-key svg {
+        width: 56%;
+        height: 56%;
+        display: block;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 2.5;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .fire-key {
+        grid-column: 1 / -1;
+        justify-self: center;
+        background: var(--danger);
+      }
+
+      .disconnect-key {
+        grid-area: end-control;
+        justify-self: center;
+        min-width: clamp(3.8rem, 8vw, 5.4rem);
+        min-height: clamp(1.75rem, 4dvh, 2.2rem);
+        padding: 0.3rem 0.65rem;
+        background: var(--danger);
+        border-radius: 999px;
+        font-size: clamp(0.58rem, 1.1vw, 0.72rem);
+      }
+
+      button:disabled,
+      select:disabled,
+      input:disabled {
+        cursor: not-allowed;
+        opacity: 0.45;
+      }
+
+      .hidden {
+        display: none !important;
+      }
+
+      @container controller-display (max-height: 21rem) {
+        .screen-header {
+          gap: clamp(0.25rem, 2cqw, 0.5rem);
+          padding: clamp(0.3rem, 2.5cqh, 0.55rem)
+            clamp(0.4rem, 3cqw, 0.7rem);
+        }
+
+        h1 {
+          font-size: clamp(0.6rem, min(4.5cqh, 4cqw), 0.82rem);
+          white-space: nowrap;
+        }
+
+        .status {
+          gap: 0.25rem;
+          font-size: clamp(0.48rem, min(3.3cqh, 3cqw), 0.62rem);
+        }
+
+        .dot {
+          width: 0.48rem;
+          height: 0.48rem;
+          border-width: 0.09rem;
+        }
+
+        .screen-content {
+          padding: clamp(0.3rem, 2.5cqh, 0.6rem)
+            clamp(0.4rem, 3cqw, 0.7rem);
+        }
+
+        #preGame,
+        #preGame > div {
+          gap: clamp(0.25rem, 2cqh, 0.45rem);
+        }
+
+        label {
+          gap: 0.15rem;
+          font-size: clamp(0.5rem, min(3.4cqh, 3cqw), 0.62rem);
+        }
+
+        input,
+        select,
+        button {
+          font-size: clamp(0.62rem, min(4.5cqh, 4cqw), 0.78rem);
+          min-height: clamp(1.55rem, 12cqh, 2.15rem);
+          padding: clamp(0.2rem, 2cqh, 0.4rem)
+            clamp(0.3rem, 2.5cqw, 0.55rem);
+        }
+
+        button {
+          border-width: 0.12rem;
+          box-shadow: 0 0.16rem 0 var(--ink);
+        }
+
+        .lobby-info {
+          margin-top: clamp(0.25rem, 2cqh, 0.45rem);
+        }
+
+        section.lobby-info {
+          gap: clamp(0.25rem, 2cqw, 0.4rem);
+        }
+
+        .player-card {
+          padding: clamp(0.25rem, 2.2cqh, 0.45rem);
+        }
+
+        .player-card strong {
+          font-size: clamp(0.52rem, min(3.5cqh, 3cqw), 0.65rem);
+        }
+
+        .player-state {
+          margin-top: 0.12rem;
+          font-size: clamp(0.46rem, min(3cqh, 2.8cqw), 0.58rem);
+          line-height: 1.15;
+        }
+
+        #matchState {
+          padding-top: clamp(0.25rem, 2cqh, 0.4rem);
+          font-size: clamp(0.5rem, min(3.6cqh, 3.2cqw), 0.66rem);
+        }
+
+        #countdownScreen,
+        #inGame {
+          min-height: 0;
+        }
+
+        .hud {
+          gap: clamp(0.3rem, 3cqh, 0.6rem);
+        }
+
+        .hud-label {
+          font-size: clamp(0.58rem, min(4cqh, 3.6cqw), 0.78rem);
+        }
+
+        .meter {
+          height: clamp(0.75rem, 7cqh, 1.1rem);
+        }
+
+        .combat-readout {
+          gap: 0.25rem 0.5rem;
+          padding-top: clamp(0.25rem, 2cqh, 0.45rem);
+          font-size: clamp(0.48rem, min(3.3cqh, 3cqw), 0.62rem);
+        }
+
+        .combat-readout .readout-value {
+          font-size: clamp(0.62rem, min(4.2cqh, 3.8cqw), 0.82rem);
+        }
+      }
+
+      @container controller-display (max-height: 11rem) {
+        .screen-header {
+          gap: 0.2rem;
+          padding: 0.2rem 0.3rem;
+        }
+
+        h1 {
+          font-size: 0.52rem;
+        }
+
+        .status {
+          gap: 0.18rem;
+          font-size: 0.42rem;
+        }
+
+        .dot {
+          width: 0.38rem;
+          height: 0.38rem;
+          border-width: 0.07rem;
+        }
+
+        .screen-content {
+          padding: 0.08rem 0.2rem;
+        }
+
+        #preGame,
+        #preGame > div {
+          gap: 0.15rem;
+        }
+
+        label {
+          gap: 0.08rem;
+          font-size: 0.44rem;
+        }
+
+        input,
+        select,
+        button {
+          min-height: 1.35rem;
+          padding: 0.1rem 0.2rem;
+          font-size: 0.52rem;
+        }
+
+        .lobby-info {
+          margin-top: 0.06rem;
+        }
+
+        section.lobby-info {
+          gap: 0.15rem;
+        }
+
+        .player-card {
+          padding: 0.12rem;
+        }
+
+        .player-card strong {
+          font-size: 0.46rem;
+        }
+
+        .player-state {
+          margin-top: 0.06rem;
+          font-size: 0.38rem;
+          line-height: 1.05;
+        }
+
+        #matchState {
+          padding-top: 0.12rem;
+          font-size: 0.42rem;
+          line-height: 1.1;
+        }
+
+        .combat-readout .readout-value {
+          font-size: 0.55rem;
+        }
+      }
+
+      @media (orientation: landscape) and (max-height: 520px) {
+        :root {
+          --stick-size: clamp(3.5rem, min(17vw, 38dvh), 13rem);
+          --button-size: clamp(2.75rem, min(10.5vw, 19dvh), 7rem);
+          --action-gap: clamp(0.35rem, 1.5vw, 1.1rem);
+        }
+
+        body {
+          padding: 0.5rem;
+        }
+
+        .controller-shell {
+          height: calc(100dvh - 1rem);
+          min-height: 0;
+          grid-template-columns:
+            minmax(0, 0.75fr)
+            minmax(min(12rem, 42vw), 1.65fr)
+            minmax(0, 0.8fr);
+          grid-template-rows: auto minmax(0, 1fr) auto;
+          gap: 0.45rem clamp(0.75rem, 2.4vw, 2.5rem);
+          padding: 0.5rem 0.75rem 0.75rem;
+          border-radius: 2rem 2rem 2.7rem 2.2rem;
+        }
+
+        .screen-bezel {
+          height: 100%;
+          min-height: 0;
+          overflow: hidden;
+          padding: clamp(0.35rem, 2.5dvh, 0.75rem);
+        }
+
+        .brand-strip {
+          min-height: 1rem;
+          column-gap: clamp(0.75rem, 2.4vw, 2.5rem);
+          padding-inline: 0;
+        }
+      }
+
+      @media (orientation: portrait) {
+        :root {
+          --stick-size: clamp(4.5rem, min(30vw, 16dvh), 9rem);
+          --button-size: clamp(3rem, min(18vw, 10dvh), 5.5rem);
+          --action-gap: clamp(0.5rem, 3vw, 1rem);
+        }
+
+        body {
+          padding: 0;
+        }
+
+        .controller-shell {
+          width: 100dvw;
+          height: 100dvh;
+          min-height: 0;
+          grid-template:
+            "brand brand" auto
+            "screen screen" minmax(0, 1fr)
+            "end-control end-control" auto
+            "move action" auto /
+            1fr 1fr;
+          gap: clamp(0.35rem, 1.5dvh, 0.75rem);
+          padding: clamp(0.5rem, 2dvh, 1.25rem);
+          border-width: 0;
+          border-radius: 0;
+        }
+
+        .screen-bezel {
+          min-height: 0;
+          padding: clamp(0.45rem, 2.5vw, 1rem);
+        }
+
+        .move-deck,
+        .action-deck {
+          align-self: center;
+        }
+      }
+
+      @container controller-display (max-width: 14rem) and (min-height: 23rem) {
+        #preGame,
+        section.lobby-info {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="controller-shell">
+      <header class="brand-strip">
+        <p class="brand-mark">TANK ARENA</p>
+        <div id="tankLinkIndicator" class="tank-link-indicator" aria-label="Tank link offline">
+          <span class="case-led" aria-hidden="true"></span>
+          <span id="tankLinkText">Tank offline</span>
+        </div>
+      </header>
+
+      <section class="move-deck" aria-label="Movement controls">
+        <div class="pad" aria-label="Joystick">
+          <div id="joystick"></div>
+        </div>
+      </section>
+
+      <section class="screen-bezel" aria-label="Tank controller display">
+        <div class="screen">
+          <header class="screen-header">
+            <h1>Tank controller</h1>
+            <div class="status">
+              <span id="statusDot" class="dot"></span>
+              <span id="statusText">Disconnected</span>
+            </div>
+          </header>
+
+          <div class="screen-content">
+            <section id="preGame">
+              <label>
+                Player
+                <select id="player">
+                  <option value="p1">White Tank</option>
+                  <option value="p2">Black Tank</option>
+                </select>
+              </label>
+              <label>
+                Name
+                <input id="username" autocomplete="name" value="Driver" />
+              </label>
+
+              <div>
+                <button id="connect" class="connect-key" type="button">
+                  Connect
+                </button>
+                <button id="ready" class="ready-key" type="button">
+                  Ready
+                </button>
+              </div>
+            </section>
+
+            <section id="countdownScreen" class="hidden">
+              <div>
+                <div id="countdownNumber" class="countdown-number">3</div>
+                <div class="countdown-label">Get ready</div>
+              </div>
+            </section>
+
+            <section id="inGame" class="hidden">
+              <div class="hud">
+                <div class="hud-label">
+                  <span>Hull integrity</span>
+                  <span><span id="healthValue">100</span> HP</span>
+                </div>
+                <div class="meter">
+                  <div id="healthFill" class="meter-fill" style="width: 100%"></div>
+                </div>
+                <div class="combat-readout" aria-live="polite">
+                  <div><span>Time</span><span id="matchTimeValue" class="readout-value">180s</span></div>
+                  <div><span>Weapon</span><span id="weaponCooldownValue" class="readout-value">Ready</span></div>
+                </div>
+              </div>
+            </section>
+
+            <section class="lobby-info" aria-live="polite">
+              <div id="p1Card" class="player-card">
+                <strong>White Tank</strong>
+                <div id="p1State" class="player-state">Open</div>
+              </div>
+              <div id="p2Card" class="player-card">
+                <strong>Black Tank</strong>
+                <div id="p2State" class="player-state">Open</div>
+              </div>
+            </section>
+
+            <div id="matchState" class="lobby-info" aria-live="polite">
+              Waiting for players
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <button id="gameDisconnect" class="disconnect-key" type="button">
+        End
+      </button>
+
+      <section class="action-deck" aria-label="Action controls">
+        <div class="actions">
+          <button id="left" class="action-key turn-key" type="button" aria-label="Rotate anticlockwise">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M3 3v5h5" />
+              <path d="M3.6 8A9 9 0 1 1 3 12" />
+            </svg>
+          </button>
+          <button id="right" class="action-key turn-key" type="button" aria-label="Rotate clockwise">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M21 3v5h-5" />
+              <path d="M20.4 8A9 9 0 1 0 21 12" />
+            </svg>
+          </button>
+          <button id="fire" class="action-key fire-key" type="button">
+            Fire
+          </button>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      const playerInput = document.querySelector("#player");
+      const usernameInput = document.querySelector("#username");
+      const statusDot = document.querySelector("#statusDot");
+      const statusText = document.querySelector("#statusText");
+      const connectButton = document.querySelector("#connect");
+      const readyButton = document.querySelector("#ready");
+      const countdownNumber = document.querySelector("#countdownNumber");
+      const gameDisconnectButton = document.querySelector("#gameDisconnect");
+      const healthFill = document.querySelector("#healthFill");
+      const healthValue = document.querySelector("#healthValue");
+      const matchTimeValue = document.querySelector("#matchTimeValue");
+      const weaponCooldownValue = document.querySelector("#weaponCooldownValue");
+      const tankLinkIndicator = document.querySelector("#tankLinkIndicator");
+      const tankLinkText = document.querySelector("#tankLinkText");
+      const fireButton = document.querySelector("#fire");
+      const leftButton = document.querySelector("#left");
+      const rightButton = document.querySelector("#right");
+      const matchStateText = document.querySelector("#matchState");
+      const p1StateText = document.querySelector("#p1State");
+      const p2StateText = document.querySelector("#p2State");
+      const preGame = document.querySelector("#preGame");
+      const countdownScreen = document.querySelector("#countdownScreen");
+      const inGame = document.querySelector("#inGame");
+      const lobbyInfo = document.querySelectorAll(".lobby-info");
+      const joystickZone = document.querySelector(".pad");
+
+      const defaultProtocol =
+        window.location.protocol === "https:" ? "wss:" : "ws:";
+      const serverUrl = `${defaultProtocol}//${window.location.host}/connect`;
+      const PLAYER_LABELS = { p1: "White Tank", p2: "Black Tank" };
+      const FIRE_COOLDOWN_MS = 2000;
+      const FIRE_VIBRATION_MS = 35;
+      const HIT_VIBRATION_PATTERN = [200, 80, 200];
+
+      let socket;
+      let seq = 0;
+      let latest = { throttle: 0, steering: 0, fire: false, left: false, right: false };
+      let sendTimer;
+      let stateTimer;
+      let fireCooldownTimer;
+      let fireCooldownEndsAt = 0;
+      let gameState;
+      let joystick;
+      let fallbackJoystickReady = false;
+      let activeJoystickPointerId = null;
+      let activeJoystickTouchId = null;
+      const heldTurns = [];
+      const lastRenderedHealth = { p1: undefined, p2: undefined };
+
+      connectButton.addEventListener("click", () => {
+        if (socket?.readyState === WebSocket.OPEN) {
+          socket.close();
+          return;
+        }
+        connect();
+      });
+
+      readyButton.addEventListener("click", () => {
+        const player = playerInput.value;
+        const nextReady = !gameState?.players?.[player]?.ready;
+        sendJson({ type: "ready", ready: nextReady });
+      });
+
+      gameDisconnectButton.addEventListener("click", () => socket?.close());
+      bindFireButton();
+      bindTurnButton(leftButton, "left");
+      bindTurnButton(rightButton, "right");
+      bindJoystickGestureGuards();
+      window.addEventListener("resize", resetJoystick);
+      playerInput.addEventListener("change", renderState);
+
+      function connect() {
+        const url = new URL(serverUrl);
+        url.searchParams.set("type", "controller");
+        url.searchParams.set("player", playerInput.value);
+        url.searchParams.set("username", usernameInput.value || "Driver");
+
+        setStatus("Connecting", false);
+        socket = new WebSocket(url);
+
+        socket.addEventListener("open", () => {
+          setStatus("Connected", true);
+          connectButton.textContent = "Disconnect";
+          playerInput.disabled = true;
+          usernameInput.disabled = true;
+          sendTimer = window.setInterval(sendInput, 50);
+          requestState();
+        });
+
+        socket.addEventListener("close", () => {
+          window.clearInterval(sendTimer);
+          clearFireCooldown();
+          setStatus("Disconnected", false);
+          connectButton.textContent = "Connect";
+          playerInput.disabled = false;
+          usernameInput.disabled = false;
+          if (gameState?.status === "COUNTDOWN" || gameState?.status === "ACTIVE") {
+            gameState = { ...gameState, status: "ENDED", winner: null };
+            renderState();
+          }
+          updateControls();
+          requestState();
+        });
+
+        socket.addEventListener("message", (event) => {
+          const message = parseJson(event.data);
+          if (message?.type === "state") {
+            gameState = message.state;
+            renderState();
+          }
+        });
+
+        socket.addEventListener("error", () =>
+          setStatus("Connection error", false),
+        );
+      }
+
+      function sendInput() {
+        sendJson({
+          throttle: latest.throttle,
+          steering: latest.steering,
+          fire: latest.fire,
+          left: latest.left,
+          right: latest.right,
+          seq: ++seq,
+          ts: Date.now(),
+        });
+      }
+
+      function sendJson(payload) {
+        if (socket?.readyState === WebSocket.OPEN) {
+          socket.send(JSON.stringify(payload));
+        }
+      }
+
+      async function requestState() {
+        sendJson({ type: "state" });
+
+        try {
+          const url = new URL(serverUrl);
+          url.protocol = url.protocol === "wss:" ? "https:" : "http:";
+          url.pathname = "/state";
+          url.search = "";
+          const response = await fetch(url);
+          if (response.ok) {
+            gameState = await response.json();
+            renderState();
+          }
+        } catch {
+          // The WebSocket state push remains the primary update path.
+        }
+      }
+
+      function renderState() {
+        if (!gameState) {
+          return;
+        }
+
+        const { p1, p2 } = gameState.players;
+        p1StateText.textContent = formatPlayerState(p1, "p1");
+        p2StateText.textContent = formatPlayerState(p2, "p2");
+        renderPlayerHealth();
+        renderTankLink();
+
+        if (gameState.status === "COUNTDOWN") {
+          matchStateText.textContent = `Starting in ${gameState.countdownSeconds}`;
+          countdownNumber.textContent = gameState.countdownSeconds;
+        } else if (gameState.status === "ACTIVE") {
+          matchStateText.textContent = `Match active: ${gameState.remainingSeconds}s left`;
+          matchTimeValue.textContent = `${gameState.remainingSeconds}s`;
+        } else if (gameState.status === "ENDED") {
+          matchStateText.textContent = gameState.winner
+            ? `${formatPlayerName(gameState.players[gameState.winner], gameState.winner)} wins`
+            : "Match ended in a draw";
+        } else {
+          matchStateText.textContent = bothReady()
+            ? "Both players ready"
+            : "Waiting for both players to ready up";
+        }
+
+        const isCountdown = gameState.status === "COUNTDOWN";
+        const isActive = gameState.status === "ACTIVE";
+        const inMatch = isCountdown || isActive;
+        preGame.classList.toggle("hidden", inMatch);
+        countdownScreen.classList.toggle("hidden", !isCountdown);
+        inGame.classList.toggle("hidden", !isActive);
+        lobbyInfo.forEach((element) => element.classList.toggle("hidden", inMatch));
+        if (isActive) {
+          window.requestAnimationFrame(setupJoystick);
+        } else {
+          clearFireCooldown();
+          teardownJoystick();
+        }
+        syncPlayerOptions();
+        updateControls();
+      }
+
+      function formatPlayerState(player, playerSlot) {
+        const connection = player.controllerConnected ? "Locked" : "Open";
+        const ready = player.ready ? "Ready" : "Not ready";
+        const tank = player.tankConnected ? "tank online" : "tank offline";
+        return `${formatPlayerName(player, playerSlot)}: ${connection}, ${ready}, ${tank}`;
+      }
+
+      function formatPlayerName(player, playerSlot) {
+        const backendDefaultName = playerSlot === "p1" ? "Player 1" : "Player 2";
+        return player.username === backendDefaultName
+          ? PLAYER_LABELS[playerSlot]
+          : player.username;
+      }
+
+      function renderPlayerHealth() {
+        const selectedPlayer = playerInput.value;
+        const player = gameState.players[selectedPlayer];
+        const health = player?.health ?? 0;
+        const previousHealth = lastRenderedHealth[selectedPlayer];
+
+        if (
+          gameState.status === "ACTIVE" &&
+          previousHealth !== undefined &&
+          health < previousHealth
+        ) {
+          vibrate(HIT_VIBRATION_PATTERN);
+        }
+
+        lastRenderedHealth.p1 = gameState.players.p1.health;
+        lastRenderedHealth.p2 = gameState.players.p2.health;
+        const healthPercent = Math.max(0, Math.min(100, health));
+        healthFill.style.width = `${healthPercent}%`;
+        healthValue.textContent = String(health);
+      }
+
+      function renderTankLink() {
+        const connected = Boolean(gameState.players[playerInput.value]?.tankConnected);
+        tankLinkIndicator.classList.toggle("online", connected);
+        tankLinkIndicator.setAttribute("aria-label", `Tank link ${connected ? "online" : "offline"}`);
+        tankLinkText.textContent = connected ? "Tank online" : "Tank offline";
+      }
+
+      function syncPlayerOptions() {
+        for (const option of playerInput.options) {
+          const player = gameState.players[option.value];
+          option.disabled = false;
+          option.textContent = `${PLAYER_LABELS[option.value]}${
+            player.controllerConnected ? " (locked)" : ""
+          }`;
+        }
+      }
+
+      function updateControls() {
+        const connected = socket?.readyState === WebSocket.OPEN;
+        const player = gameState?.players?.[playerInput.value];
+        const ready = Boolean(player?.ready);
+        const lobbyStatus = !gameState || gameState.status === "LOBBY" || gameState.status === "ENDED";
+        const selectedSlotLocked = Boolean(!connected && player?.controllerConnected);
+        const canControl = connected && gameState?.status === "ACTIVE";
+        const cooldownMs = Math.max(0, fireCooldownEndsAt - Date.now());
+
+        connectButton.disabled = selectedSlotLocked;
+        readyButton.disabled = !connected || !lobbyStatus;
+        readyButton.textContent = ready ? "Unready" : "Ready";
+        gameDisconnectButton.disabled = !connected;
+        fireButton.disabled = !canControl || cooldownMs > 0;
+        fireButton.textContent = cooldownMs > 0 ? `${(cooldownMs / 1000).toFixed(1)}s` : "Fire";
+        weaponCooldownValue.textContent = cooldownMs > 0
+          ? `Reloading ${(cooldownMs / 1000).toFixed(1)}s`
+          : "Ready";
+        leftButton.disabled = !canControl;
+        rightButton.disabled = !canControl;
+        if (!canControl) {
+          heldTurns.length = 0;
+          latest.fire = false;
+          latest.left = false;
+          latest.right = false;
+        }
+      }
+
+      function bindFireButton() {
+        fireButton.addEventListener("pointerdown", () => {
+          if (fireButton.disabled || Date.now() < fireCooldownEndsAt) {
+            return;
+          }
+
+          fireCooldownEndsAt = Date.now() + FIRE_COOLDOWN_MS;
+          vibrate(FIRE_VIBRATION_MS);
+          latest.fire = true;
+          sendInput();
+          latest.fire = false;
+          startFireCooldownTimer();
+          updateControls();
+        });
+      }
+
+      function startFireCooldownTimer() {
+        window.clearInterval(fireCooldownTimer);
+        fireCooldownTimer = window.setInterval(() => {
+          if (Date.now() >= fireCooldownEndsAt) {
+            clearFireCooldown();
+          }
+          updateControls();
+        }, 100);
+      }
+
+      function clearFireCooldown() {
+        window.clearInterval(fireCooldownTimer);
+        fireCooldownTimer = undefined;
+        fireCooldownEndsAt = 0;
+      }
+
+      function bindTurnButton(button, direction) {
+        button.addEventListener("pointerdown", (event) => {
+          button.setPointerCapture(event.pointerId);
+          const previousIndex = heldTurns.indexOf(direction);
+          if (previousIndex !== -1) {
+            heldTurns.splice(previousIndex, 1);
+          }
+          heldTurns.push(direction);
+          syncHeldTurn();
+        });
+
+        const release = () => {
+          const index = heldTurns.indexOf(direction);
+          if (index !== -1) {
+            heldTurns.splice(index, 1);
+            syncHeldTurn();
+          }
+        };
+        button.addEventListener("pointerup", release);
+        button.addEventListener("pointercancel", release);
+        button.addEventListener("lostpointercapture", release);
+      }
+
+      function syncHeldTurn() {
+        const activeTurn = heldTurns[heldTurns.length - 1];
+        latest.left = activeTurn === "left";
+        latest.right = activeTurn === "right";
+        sendInput();
+      }
+
+      function bothReady() {
+        return Boolean(
+          gameState?.players?.p1?.controllerConnected &&
+            gameState?.players?.p2?.controllerConnected &&
+            gameState?.players?.p1?.ready &&
+            gameState?.players?.p2?.ready,
+        );
+      }
+
+      function parseJson(value) {
+        try {
+          return JSON.parse(value);
+        } catch {
+          return null;
+        }
+      }
+
+      function setupJoystick() {
+        if (joystick || fallbackJoystickReady) {
+          return;
+        }
+
+        const dimensions = syncJoystickDimensions();
+        if (!dimensions) {
+          return;
+        }
+
+        const { rect, outerSize: size } = dimensions;
+
+        if (!window.nipplejs) {
+          setupFallbackJoystick();
+          return;
+        }
+
+        joystick = nipplejs.create({
+          zone: joystickZone,
+          mode: "static",
+          position: { left: `${rect.width / 2}px`, top: `${rect.height / 2}px` },
+          size,
+        });
+
+        joystick.on("move", (_event, data) => {
+          latest = {
+            ...latest,
+            throttle: clamp(data.vector?.y ?? 0),
+            steering: clamp(data.vector?.x ?? 0),
+          };
+        });
+
+        joystick.on("end", stopMoving);
+      }
+
+      function bindJoystickGestureGuards() {
+        const preventNativeGesture = (event) => event.preventDefault();
+
+        document.addEventListener("selectstart", preventNativeGesture);
+        document.addEventListener("dragstart", preventNativeGesture);
+        document.addEventListener("contextmenu", (event) => {
+          event.preventDefault();
+          if (isJoystickGestureActive()) {
+            cancelJoystickGesture();
+          }
+        });
+        joystickZone.addEventListener(
+          "pointerdown",
+          (event) => {
+            activeJoystickPointerId = event.pointerId;
+            event.preventDefault();
+          },
+          true,
+        );
+        joystickZone.addEventListener(
+          "touchstart",
+          (event) => {
+            activeJoystickTouchId ??= event.changedTouches[0]?.identifier ?? null;
+            event.preventDefault();
+          },
+          { capture: true, passive: false },
+        );
+
+        document.addEventListener("pointerup", releaseJoystickPointer, true);
+        document.addEventListener("pointercancel", releaseJoystickPointer, true);
+        document.addEventListener("touchend", releaseJoystickTouch, true);
+        document.addEventListener("touchcancel", releaseJoystickTouch, true);
+        document.addEventListener("selectionchange", handleJoystickSelection);
+        document.addEventListener("visibilitychange", () => {
+          if (document.hidden) {
+            cancelJoystickGesture();
+          }
+        });
+        window.addEventListener("blur", cancelJoystickGesture);
+        window.addEventListener("pagehide", cancelJoystickGesture);
+      }
+
+      function releaseJoystickPointer(event) {
+        if (event.pointerId !== activeJoystickPointerId) {
+          return;
+        }
+
+        activeJoystickPointerId = null;
+        stopMoving();
+      }
+
+      function releaseJoystickTouch(event) {
+        const activeTouchEnded = Array.from(event.changedTouches).some(
+          (touch) => touch.identifier === activeJoystickTouchId,
+        );
+        if (!activeTouchEnded) {
+          return;
+        }
+
+        activeJoystickTouchId = null;
+        stopMoving();
+      }
+
+      function handleJoystickSelection() {
+        const selection = window.getSelection();
+        if (!selection || selection.isCollapsed) {
+          return;
+        }
+
+        selection.removeAllRanges();
+        if (isJoystickGestureActive()) {
+          cancelJoystickGesture();
+        }
+      }
+
+      function isJoystickGestureActive() {
+        return activeJoystickPointerId !== null || activeJoystickTouchId !== null;
+      }
+
+      function cancelJoystickGesture() {
+        activeJoystickPointerId = null;
+        activeJoystickTouchId = null;
+        stopMoving();
+        resetJoystick();
+      }
+
+      function resetJoystick() {
+        syncJoystickDimensions();
+        if (!joystick) {
+          return;
+        }
+
+        joystick.destroy();
+        joystick = null;
+        window.requestAnimationFrame(setupJoystick);
+      }
+
+      function syncJoystickDimensions() {
+        const rect = joystickZone.getBoundingClientRect();
+        if (!rect.width || !rect.height) {
+          return null;
+        }
+
+        const outerSize = Math.min(rect.width, rect.height) * 0.72;
+        const innerSize = outerSize * 0.68;
+        joystickZone.style.setProperty("--joystick-outer-size", `${outerSize}px`);
+        joystickZone.style.setProperty("--joystick-inner-size", `${innerSize}px`);
+        return { rect, outerSize };
+      }
+
+      function setupFallbackJoystick() {
+        fallbackJoystickReady = true;
+        joystickZone.addEventListener("pointerdown", handleFallbackPointer);
+        joystickZone.addEventListener("pointermove", handleFallbackPointer);
+        joystickZone.addEventListener("pointerup", stopMoving);
+        joystickZone.addEventListener("pointercancel", stopMoving);
+      }
+
+      function teardownJoystick() {
+        activeJoystickPointerId = null;
+        activeJoystickTouchId = null;
+
+        if (joystick) {
+          joystick.destroy();
+          joystick = null;
+        }
+
+        if (latest.throttle !== 0 || latest.steering !== 0) {
+          stopMoving();
+        }
+      }
+
+      function handleFallbackPointer(event) {
+        if (event.type === "pointermove" && event.buttons === 0) {
+          return;
+        }
+
+        const rect = joystickZone.getBoundingClientRect();
+        const radius = Math.min(rect.width, rect.height) / 2;
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+        latest = {
+          ...latest,
+          throttle: clamp((centerY - event.clientY) / radius),
+          steering: clamp((event.clientX - centerX) / radius),
+        };
+      }
+
+      function stopMoving() {
+        latest = { ...latest, throttle: 0, steering: 0 };
+        joystick?.get?.()?.setPosition?.(undefined, { x: 0, y: 0 });
+        sendInput();
+      }
+
+      function setStatus(text, connected) {
+        statusText.textContent = text;
+        statusDot.classList.toggle("connected", connected);
+      }
+
+      function vibrate(pattern) {
+        navigator.vibrate?.(pattern);
+      }
+
+      function clamp(value) {
+        return Math.max(-1, Math.min(1, value));
+      }
+
+      stateTimer = window.setInterval(requestState, 1000);
+      window.requestAnimationFrame(syncJoystickDimensions);
+      requestState();
+      updateControls();
+    </script>
+  </body>
+</html>
