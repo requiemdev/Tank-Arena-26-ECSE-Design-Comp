@@ -2,14 +2,15 @@
 
 **Winner of the Part III Engineering Excellence Award at the 2026 University of Auckland ECSE Design Competition.**
 
+<img align="right" width="320" alt="image" src="https://github.com/user-attachments/assets/3cf303a9-b68a-4d62-8d2b-9e487abbabd8" />
+
 Tank Arena is a two-player tank duel game that combines custom 3D-printed tanks, ESP32 embedded firmware, electrical design, and a browser-based control experience. Players drive and fire from their phones while an edge server coordinates the match, validates gameplay, reports hits, and records completed results.
 
-<img width="1787" height="1341" alt="image" src="https://github.com/user-attachments/assets/3cf303a9-b68a-4d62-8d2b-9e487abbabd8" />
-<img width="2160" height="2880" alt="image" src="https://github.com/user-attachments/assets/6daca0da-4c86-4d6f-a143-70af546196b3" />
-<img width="992" height="478" alt="image" src="https://github.com/user-attachments/assets/951309a1-e6d4-42d1-a328-169d7c46e153" />
-
+<br clear="both">
 
 ## Project Key Points
+
+<img align="left" width="260" alt="image" src="https://github.com/user-attachments/assets/6daca0da-4c86-4d6f-a143-70af546196b3" />
 
 This is a complete hardware–software product rather than a standalone robot or web demo:
 
@@ -20,7 +21,11 @@ This is a complete hardware–software product rather than a standalone robot or
 - Completed games are queued locally in SQLite and synchronized to Supabase when connectivity is available.
 - Spectator and leaderboard views make the system usable beyond the players themselves.
 
+<br clear="both">
+
 ## System overview
+
+<img align="right" width="360" alt="image" src="https://github.com/user-attachments/assets/951309a1-e6d4-42d1-a328-169d7c46e153" />
 
 1. Players open `/controller` on their phones, select a tank, and ready up.
 2. Each ESP32 tank connects to `/connect?type=tank&player=p1|p2`.
@@ -30,9 +35,11 @@ This is a complete hardware–software product rather than a standalone robot or
 
 The game lifecycle is explicitly modelled as `LOBBY → COUNTDOWN → ACTIVE → ENDED`, which keeps connection loss, invalid actions, and match completion predictable.
 
+<br clear="both">
+
 ## Engineering highlights
 
-- **Embedded systems:** ESP32 firmware for Wi-Fi, WebSocket communication, watchdog/reconnect behaviour, String parsing to encode/decode messages from server, interrupt handling for hit sensing, PWM outputs(For motor control and  IR emitter firing).
+- **Embedded systems:** ESP32 firmware for Wi-Fi, WebSocket communication, watchdog/reconnect behaviour, String parsing to encode/decode messages from server, interrupt handling for hit sensing, PWM outputs (for motor control and IR emitter firing).
 - **Real-time networking:** Persistent WebSocket connections for low-latency control and event delivery.
 - **Authoritative game logic:** Server-side validation prevents the browser from directly deciding hits, health, scores, or winners.
 - **Resilient operation:** Connection lifecycle handling, safe match termination, local SQLite queueing, and deferred cloud synchronization support unreliable competition-day networks.
