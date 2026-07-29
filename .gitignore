@@ -116,3 +116,13 @@ dist/
 .env
 data/local_queue.db
 data/local_queue.db-*
+
+# Logfile
+*.log
+
+# Simulation Outputs
+*.raw
+*.fft
+
+# Netlist
+*.net
