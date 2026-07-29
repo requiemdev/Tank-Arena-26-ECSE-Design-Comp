@@ -15,7 +15,7 @@ function createOpenSocket(): WebSocket & FakeSocket {
     readyState: WebSocket.OPEN,
     sent: [],
     send(message: string) {
-      socket.sent.push(message);
+      socket.sent.push(message); 
     }
   };
 
@@ -282,17 +282,20 @@ describe('GameEngine', () => {
     assert.equal(results.length, 0);
   });
 
-  it('does not queue an active match that ends without a winner', () => {
+  it('does not queue an active match stopped before a player loses', () => {
     const results: MatchResult[] = [];
     const engine = new GameEngine((result) => {
       results.push(result);
     });
 
     engine.getState().status = 'ACTIVE';
-    engine.disconnectController('p1');
+    engine.getState().players.p1.score = 20;
+    engine.disconnectController('p2');
 
     assert.equal(engine.getPublicState().status, 'ENDED');
-    assert.equal(engine.getPublicState().winner, null);
+    assert.equal(engine.getPublicState().winner, 'p1');
+    assert.equal(engine.getPublicState().players.p1.health, 100);
+    assert.equal(engine.getPublicState().players.p2.health, 100);
     assert.equal(results.length, 0);
   });
 

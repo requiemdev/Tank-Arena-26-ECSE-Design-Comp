@@ -68,6 +68,7 @@ describe('HTTP implementation', () => {
     assert.match(response.body, /Time remaining/);
     assert.match(response.body, /connect\?type=spectator/);
     assert.match(response.body, /state\.remainingSeconds/);
+    assert.doesNotMatch(response.body, /Dot matrix match display|Spectator system/);
   });
 
   it('serves a fastest-games leaderboard without a date column', async (t) => {

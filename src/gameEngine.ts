@@ -263,7 +263,11 @@ export class GameEngine {
 
   private queueResult(): void {
     const winner = this.state.winner;
-    if (this.resultQueued || !winner) {
+    if (
+      this.resultQueued ||
+      !winner ||
+      this.state.players[this.otherPlayer(winner)].health > 0
+    ) {
       return;
     }
 
